@@ -106,8 +106,8 @@ impl SportsFetcher {
                     league: league.to_uppercase(),
                     home_team: home.team.display_name.clone(),
                     away_team: away.team.display_name.clone(),
-                    home_score: home.score.as_ref().and_then(|s| s.parse().ok()),
-                    away_score: away.score.as_ref().and_then(|s| s.parse().ok()),
+                    home_score: away.score.as_ref().and_then(|s| s.parse().ok()),
+                    away_score: home.score.as_ref().and_then(|s| s.parse().ok()),
                     status: event.status.status_type.description.clone(),
                     start_time: competition.start_date.clone(),
                 })
