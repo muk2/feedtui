@@ -1,6 +1,6 @@
 use crate::creature::{
-    art::get_creature_art, get_all_emotes, get_all_outfits, get_skill_tree, Creature,
-    CreatureColor, CreatureMood, CreatureSpecies,
+    art::get_creature_art, get_all_outfits, get_skill_tree, Creature,
+    CreatureColor, CreatureSpecies,
 };
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -162,8 +162,8 @@ impl CreatureMenu {
             }
             MenuTab::Outfits => {
                 if let Some(selected) = self.outfit_list_state.selected() {
-                    if let Some(outfit_id) = creature.unlocked_outfits.get(selected) {
-                        creature.equip_outfit(outfit_id);
+                    if let Some(outfit_id) = creature.unlocked_outfits.get(selected).cloned() {
+                        creature.equip_outfit(&outfit_id);
                         return true;
                     }
                 }

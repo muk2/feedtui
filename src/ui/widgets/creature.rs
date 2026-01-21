@@ -1,5 +1,5 @@
 use crate::config::CreatureConfig;
-use crate::creature::art::{get_creature_art, get_greeting, get_idle_message, get_xp_bar};
+use crate::creature::art::{get_creature_art, get_greeting, get_idle_message};
 use crate::creature::Creature;
 use crate::feeds::{FeedData, FeedFetcher};
 use crate::ui::widgets::FeedWidget;

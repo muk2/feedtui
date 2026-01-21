@@ -16,7 +16,7 @@ use crossterm::{
 };
 use ratatui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout},
     Frame, Terminal,
 };
 use std::io::{self, Stdout};
