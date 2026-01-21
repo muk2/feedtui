@@ -1,24 +1,32 @@
 # feedtui configuration
-# Copy this file to ~/.config/feedtui/config.toml
+# Copy this file to ~/.feedtui/config.toml
 
 [general]
 refresh_interval_secs = 60
 theme = "dark"
 
-# Hacker News - top left
+# Tui - Your companion creature! - top left
+# Press 't' to open the Tui menu and customize your creature
+[[widgets]]
+type = "creature"
+title = "Tui"
+show_on_startup = true
+position = { row = 0, col = 0 }
+
+# Hacker News - top middle
 [[widgets]]
 type = "hackernews"
 title = "Hacker News"
 story_count = 10
 story_type = "top"  # top, new, best
-position = { row = 0, col = 0 }
+position = { row = 0, col = 1 }
 
 # Stocks - top right
 [[widgets]]
 type = "stocks"
 title = "Portfolio"
 symbols = ["AAPL", "GOOGL", "MSFT", "NVDA", "TSLA"]
-position = { row = 0, col = 1 }
+position = { row = 0, col = 2 }
 
 # Tech News (RSS) - bottom left
 [[widgets]]

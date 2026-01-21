@@ -42,6 +42,20 @@ pub enum WidgetConfig {
     Hackernews(HackernewsConfig),
     Sports(SportsConfig),
     Rss(RssConfig),
+    Creature(CreatureConfig),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreatureConfig {
+    #[serde(default = "default_creature_title")]
+    pub title: String,
+    #[serde(default)]
+    pub show_on_startup: bool,
+    pub position: Position,
+}
+
+fn default_creature_title() -> String {
+    "Tui".to_string()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -128,11 +142,16 @@ impl Default for Config {
         Self {
             general: GeneralConfig::default(),
             widgets: vec![
+                WidgetConfig::Creature(CreatureConfig {
+                    title: "Tui".to_string(),
+                    show_on_startup: true,
+                    position: Position { row: 0, col: 0 },
+                }),
                 WidgetConfig::Hackernews(HackernewsConfig {
                     title: "Hacker News".to_string(),
                     story_count: 10,
                     story_type: "top".to_string(),
-                    position: Position { row: 0, col: 0 },
+                    position: Position { row: 0, col: 1 },
                 }),
                 WidgetConfig::Stocks(StocksConfig {
                     title: "Stocks".to_string(),
@@ -142,18 +161,18 @@ impl Default for Config {
                         "MSFT".to_string(),
                         "NVDA".to_string(),
                     ],
-                    position: Position { row: 0, col: 1 },
+                    position: Position { row: 1, col: 0 },
                 }),
                 WidgetConfig::Rss(RssConfig {
                     title: "Tech News".to_string(),
                     feeds: vec!["https://feeds.arstechnica.com/arstechnica/technology-lab".to_string()],
                     max_items: 10,
-                    position: Position { row: 1, col: 0 },
+                    position: Position { row: 1, col: 1 },
                 }),
                 WidgetConfig::Sports(SportsConfig {
                     title: "Sports".to_string(),
                     leagues: vec!["nba".to_string(), "nfl".to_string()],
-                    position: Position { row: 1, col: 1 },
+                    position: Position { row: 2, col: 0 },
                 }),
             ],
         }

@@ -1,9 +1,12 @@
 use crate::config::{Config, WidgetConfig};
+use crate::creature::persistence::{default_creature_path, load_or_create_creature, save_creature};
+use crate::creature::Creature;
 use crate::event::{Event, EventHandler};
 use crate::feeds::{FeedData, FeedMessage};
+use crate::ui::creature_menu::CreatureMenu;
 use crate::ui::widgets::{
-    hackernews::HackernewsWidget, rss::RssWidget, sports::SportsWidget, stocks::StocksWidget,
-    FeedWidget,
+    creature::CreatureWidget, hackernews::HackernewsWidget, rss::RssWidget, sports::SportsWidget,
+    stocks::StocksWidget, FeedWidget,
 };
 use anyhow::Result;
 use crossterm::{
@@ -17,7 +20,8 @@ use ratatui::{
     Frame, Terminal,
 };
 use std::io::{self, Stdout};
-use std::time::Duration;
+use std::path::PathBuf;
+use std::time::{Duration, Instant};
 use tokio::sync::mpsc;
 
 pub struct App {
@@ -27,13 +31,25 @@ pub struct App {
     should_quit: bool,
     feed_rx: mpsc::UnboundedReceiver<FeedMessage>,
     feed_tx: mpsc::UnboundedSender<FeedMessage>,
+    creature_path: PathBuf,
+    creature_widget_idx: Option<usize>,
+    last_xp_tick: Instant,
+    creature_menu: CreatureMenu,
 }
 
 impl App {
     pub fn new(config: Config) -> Self {
         let (feed_tx, feed_rx) = mpsc::unbounded_channel();
 
+        // Load or create creature
+        let creature_path = default_creature_path();
+        let creature = load_or_create_creature(&creature_path).unwrap_or_else(|e| {
+            eprintln!("Warning: Could not load creature: {}", e);
+            Creature::default()
+        });
+
         let mut widgets: Vec<Box<dyn FeedWidget>> = Vec::new();
+        let mut creature_widget_idx = None;
 
         for widget_config in &config.widgets {
             let widget: Box<dyn FeedWidget> = match widget_config {
@@ -41,6 +57,10 @@ impl App {
                 WidgetConfig::Stocks(cfg) => Box::new(StocksWidget::new(cfg.clone())),
                 WidgetConfig::Rss(cfg) => Box::new(RssWidget::new(cfg.clone())),
                 WidgetConfig::Sports(cfg) => Box::new(SportsWidget::new(cfg.clone())),
+                WidgetConfig::Creature(cfg) => {
+                    creature_widget_idx = Some(widgets.len());
+                    Box::new(CreatureWidget::new(cfg.clone(), creature.clone()))
+                }
             };
             widgets.push(widget);
         }
@@ -52,6 +72,10 @@ impl App {
             should_quit: false,
             feed_rx,
             feed_tx,
+            creature_path,
+            creature_widget_idx,
+            last_xp_tick: Instant::now(),
+            creature_menu: CreatureMenu::default(),
         }
     }
 
@@ -74,6 +98,9 @@ impl App {
 
         // Main loop
         while !self.should_quit {
+            // Update creature
+            self.tick_creature();
+
             // Draw UI
             terminal.draw(|frame| self.render(frame))?;
 
@@ -89,6 +116,9 @@ impl App {
                 }
             }
         }
+
+        // Save creature state before exiting
+        self.save_creature_state();
 
         Self::restore_terminal(&mut terminal)?;
         Ok(())
@@ -121,18 +151,52 @@ impl App {
 
     fn handle_event(&mut self, event: Event) {
         match event {
-            Event::Key(key) => match key.code {
-                KeyCode::Char('q') => self.should_quit = true,
-                KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                    self.should_quit = true
+            Event::Key(key) => {
+                // If creature menu is visible, route events there
+                if self.creature_menu.visible {
+                    match key.code {
+                        KeyCode::Char('t') | KeyCode::Esc => self.creature_menu.toggle(),
+                        KeyCode::Tab => self.creature_menu.next_tab(),
+                        KeyCode::BackTab => self.creature_menu.prev_tab(),
+                        KeyCode::Down | KeyCode::Char('j') => {
+                            if let Some(creature) = self.get_creature() {
+                                self.creature_menu.scroll_down(&creature);
+                            }
+                        }
+                        KeyCode::Up | KeyCode::Char('k') => self.creature_menu.scroll_up(),
+                        KeyCode::Enter => {
+                            if let Some(idx) = self.creature_widget_idx {
+                                if let Some(widget) = self.widgets.get_mut(idx) {
+                                    if let Some(creature_widget) = widget
+                                        .as_any_mut()
+                                        .and_then(|w| w.downcast_mut::<CreatureWidget>())
+                                    {
+                                        self.creature_menu.select(creature_widget.creature_mut());
+                                    }
+                                }
+                            }
+                        }
+                        KeyCode::Char('q') => self.should_quit = true,
+                        _ => {}
+                    }
+                    return;
                 }
-                KeyCode::Char('r') => self.refresh_all(),
-                KeyCode::Tab => self.next_widget(),
-                KeyCode::BackTab => self.prev_widget(),
-                KeyCode::Down | KeyCode::Char('j') => self.scroll_down(),
-                KeyCode::Up | KeyCode::Char('k') => self.scroll_up(),
-                _ => {}
-            },
+
+                // Normal event handling
+                match key.code {
+                    KeyCode::Char('q') => self.should_quit = true,
+                    KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        self.should_quit = true
+                    }
+                    KeyCode::Char('r') => self.refresh_all(),
+                    KeyCode::Char('t') => self.toggle_creature_menu(),
+                    KeyCode::Tab => self.next_widget(),
+                    KeyCode::BackTab => self.prev_widget(),
+                    KeyCode::Down | KeyCode::Char('j') => self.scroll_down(),
+                    KeyCode::Up | KeyCode::Char('k') => self.scroll_up(),
+                    _ => {}
+                }
+            }
             Event::Tick => {}
             Event::Resize(_, _) => {}
             Event::Mouse(_) => {}
@@ -182,6 +246,24 @@ impl App {
         // by restarting the fetchers (simplified for now)
     }
 
+    fn toggle_creature_menu(&mut self) {
+        self.creature_menu.toggle();
+    }
+
+    fn get_creature(&self) -> Option<Creature> {
+        if let Some(idx) = self.creature_widget_idx {
+            if let Some(widget) = self.widgets.get(idx) {
+                if let Some(creature_widget) = widget
+                    .as_any()
+                    .and_then(|w| w.downcast_ref::<CreatureWidget>())
+                {
+                    return Some(creature_widget.creature().clone());
+                }
+            }
+        }
+        None
+    }
+
     fn next_widget(&mut self) {
         if !self.widgets.is_empty() {
             self.widgets[self.selected_widget].set_selected(false);
@@ -214,7 +296,7 @@ impl App {
         }
     }
 
-    fn render(&self, frame: &mut Frame) {
+    fn render(&mut self, frame: &mut Frame) {
         let area = frame.area();
 
         // Calculate grid dimensions
@@ -248,6 +330,13 @@ impl App {
                 }
             }
         }
+
+        // Render creature menu overlay if visible
+        if self.creature_menu.visible {
+            if let Some(creature) = self.get_creature() {
+                self.creature_menu.render(frame, area, &creature);
+            }
+        }
     }
 
     fn calculate_grid_dimensions(&self) -> (usize, usize) {
@@ -261,5 +350,43 @@ impl App {
         }
 
         (max_row, max_col)
+    }
+
+    /// Tick the creature widget for animations and XP
+    fn tick_creature(&mut self) {
+        if let Some(idx) = self.creature_widget_idx {
+            // Tick animation
+            if let Some(widget) = self.widgets.get_mut(idx) {
+                if let Some(creature_widget) = widget
+                    .as_any_mut()
+                    .and_then(|w| w.downcast_mut::<CreatureWidget>())
+                {
+                    creature_widget.tick();
+
+                    // Award XP every 10 seconds
+                    if self.last_xp_tick.elapsed().as_secs() >= 10 {
+                        let xp = creature_widget.creature_mut().tick_session(10);
+                        creature_widget.creature_mut().add_experience(xp);
+                        self.last_xp_tick = Instant::now();
+                    }
+                }
+            }
+        }
+    }
+
+    /// Save creature state to disk
+    fn save_creature_state(&self) {
+        if let Some(idx) = self.creature_widget_idx {
+            if let Some(widget) = self.widgets.get(idx) {
+                if let Some(creature_widget) = widget
+                    .as_any()
+                    .and_then(|w| w.downcast_ref::<CreatureWidget>())
+                {
+                    if let Err(e) = save_creature(creature_widget.creature(), &self.creature_path) {
+                        eprintln!("Warning: Could not save creature state: {}", e);
+                    }
+                }
+            }
+        }
     }
 }

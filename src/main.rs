@@ -1,5 +1,6 @@
 mod app;
 mod config;
+mod creature;
 mod event;
 mod feeds;
 mod ui;
