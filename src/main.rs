@@ -31,7 +31,10 @@ async fn main() -> Result<()> {
     });
 
     let config = config::Config::load(&config_path).unwrap_or_else(|e| {
-        eprintln!("Warning: Could not load config from {:?}: {}", config_path, e);
+        eprintln!(
+            "Warning: Could not load config from {:?}: {}",
+            config_path, e
+        );
         eprintln!("Using default configuration...");
         config::Config::default()
     });

@@ -39,9 +39,27 @@ feeds = [
 max_items = 10
 position = { row = 1, col = 0 }
 
-# Sports - bottom right
+# Sports - bottom middle
 [[widgets]]
 type = "sports"
 title = "Sports"
 leagues = ["nba", "nfl", "epl"]
 position = { row = 1, col = 1 }
+
+# GitHub Dashboard - bottom right
+# A comprehensive GitHub dashboard with notifications, PRs, and commits
+# Requires a GitHub personal access token with notifications and repo scope
+# Set environment variable: export GITHUB_TOKEN=your_token_here
+# Use h/l or Left/Right arrow keys to switch between tabs
+[[widgets]]
+type = "github"
+title = "GitHub Dashboard"
+token = "${GITHUB_TOKEN}"  # Replace with your GitHub token or use environment variable
+username = "your-username"  # Your GitHub username
+show_notifications = true
+show_pull_requests = true
+show_commits = true
+max_notifications = 20
+max_pull_requests = 10
+max_commits = 10
+position = { row = 1, col = 2 }

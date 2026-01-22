@@ -1,11 +1,12 @@
 pub mod creature;
+pub mod github;
 pub mod hackernews;
 pub mod rss;
 pub mod sports;
 pub mod stocks;
 
 use crate::feeds::{FeedData, FeedFetcher};
-use ratatui::{layout::Rect, Frame};
+use ratatui::{Frame, layout::Rect};
 use std::any::Any;
 
 pub trait FeedWidget: Send + Sync {

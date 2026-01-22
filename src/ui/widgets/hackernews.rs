@@ -3,11 +3,11 @@ use crate::feeds::hackernews::HnFetcher;
 use crate::feeds::{FeedData, FeedFetcher, HnStory};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
-    Frame,
 };
 
 pub struct HackernewsWidget {
@@ -37,7 +37,10 @@ impl HackernewsWidget {
 
 impl FeedWidget for HackernewsWidget {
     fn id(&self) -> String {
-        format!("hackernews-{}-{}", self.config.position.row, self.config.position.col)
+        format!(
+            "hackernews-{}-{}",
+            self.config.position.row, self.config.position.col
+        )
     }
 
     fn title(&self) -> &str {
@@ -79,10 +82,7 @@ impl FeedWidget for HackernewsWidget {
             .enumerate()
             .map(|(i, story)| {
                 let title_line = Line::from(vec![
-                    Span::styled(
-                        format!("{}. ", i + 1),
-                        Style::default().fg(Color::DarkGray),
-                    ),
+                    Span::styled(format!("{}. ", i + 1), Style::default().fg(Color::DarkGray)),
                     Span::styled(&story.title, Style::default().fg(Color::White)),
                 ]);
 
@@ -105,13 +105,11 @@ impl FeedWidget for HackernewsWidget {
             })
             .collect();
 
-        let list = List::new(items)
-            .block(block)
-            .highlight_style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
+        let list = List::new(items).block(block).highlight_style(
+            Style::default()
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        );
 
         let mut state = self.scroll_state.clone();
         frame.render_stateful_widget(list, area, &mut state);

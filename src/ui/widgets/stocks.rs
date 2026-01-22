@@ -3,11 +3,11 @@ use crate::feeds::stocks::StocksFetcher;
 use crate::feeds::{FeedData, FeedFetcher, StockQuote};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
-    Frame,
 };
 
 pub struct StocksWidget {
@@ -37,7 +37,10 @@ impl StocksWidget {
 
 impl FeedWidget for StocksWidget {
     fn id(&self) -> String {
-        format!("stocks-{}-{}", self.config.position.row, self.config.position.col)
+        format!(
+            "stocks-{}-{}",
+            self.config.position.row, self.config.position.col
+        )
     }
 
     fn title(&self) -> &str {
@@ -98,27 +101,23 @@ impl FeedWidget for StocksWidget {
                     ),
                 ]);
 
-                let change_line = Line::from(vec![
-                    Span::styled(
-                        format!(
-                            "      {}{:.2} ({}{:.2}%)",
-                            change_symbol, quote.change, change_symbol, quote.change_percent
-                        ),
-                        Style::default().fg(change_color),
+                let change_line = Line::from(vec![Span::styled(
+                    format!(
+                        "      {}{:.2} ({}{:.2}%)",
+                        change_symbol, quote.change, change_symbol, quote.change_percent
                     ),
-                ]);
+                    Style::default().fg(change_color),
+                )]);
 
                 ListItem::new(vec![symbol_line, change_line])
             })
             .collect();
 
-        let list = List::new(items)
-            .block(block)
-            .highlight_style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
+        let list = List::new(items).block(block).highlight_style(
+            Style::default()
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        );
 
         let mut state = self.scroll_state.clone();
         frame.render_stateful_widget(list, area, &mut state);

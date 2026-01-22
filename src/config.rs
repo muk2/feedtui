@@ -43,6 +43,7 @@ pub enum WidgetConfig {
     Sports(SportsConfig),
     Rss(RssConfig),
     Creature(CreatureConfig),
+    Github(GithubConfig),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -129,6 +130,55 @@ fn default_max_items() -> usize {
     15
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GithubConfig {
+    #[serde(default = "default_github_title")]
+    pub title: String,
+    pub token: String,
+    pub username: String,
+    #[serde(default = "default_show_notifications")]
+    pub show_notifications: bool,
+    #[serde(default = "default_show_pull_requests")]
+    pub show_pull_requests: bool,
+    #[serde(default = "default_show_commits")]
+    pub show_commits: bool,
+    #[serde(default = "default_max_notifications")]
+    pub max_notifications: usize,
+    #[serde(default = "default_max_pull_requests")]
+    pub max_pull_requests: usize,
+    #[serde(default = "default_max_commits")]
+    pub max_commits: usize,
+    pub position: Position,
+}
+
+fn default_github_title() -> String {
+    "GitHub Dashboard".to_string()
+}
+
+fn default_show_notifications() -> bool {
+    true
+}
+
+fn default_show_pull_requests() -> bool {
+    true
+}
+
+fn default_show_commits() -> bool {
+    true
+}
+
+fn default_max_notifications() -> usize {
+    20
+}
+
+fn default_max_pull_requests() -> usize {
+    10
+}
+
+fn default_max_commits() -> usize {
+    10
+}
+
 impl Config {
     pub fn load(path: &Path) -> Result<Self> {
         let content = std::fs::read_to_string(path)?;
@@ -165,7 +215,9 @@ impl Default for Config {
                 }),
                 WidgetConfig::Rss(RssConfig {
                     title: "Tech News".to_string(),
-                    feeds: vec!["https://feeds.arstechnica.com/arstechnica/technology-lab".to_string()],
+                    feeds: vec![
+                        "https://feeds.arstechnica.com/arstechnica/technology-lab".to_string(),
+                    ],
                     max_items: 10,
                     position: Position { row: 1, col: 1 },
                 }),

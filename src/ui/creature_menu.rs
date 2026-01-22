@@ -1,13 +1,13 @@
 use crate::creature::{
-    art::get_creature_art, get_all_outfits, get_skill_tree, Creature,
-    CreatureColor, CreatureSpecies,
+    Creature, CreatureColor, CreatureSpecies, art::get_creature_art, get_all_outfits,
+    get_skill_tree,
 };
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs},
-    Frame,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,7 +20,12 @@ pub enum MenuTab {
 
 impl MenuTab {
     fn all() -> Vec<MenuTab> {
-        vec![MenuTab::Stats, MenuTab::Skills, MenuTab::Outfits, MenuTab::Customize]
+        vec![
+            MenuTab::Stats,
+            MenuTab::Skills,
+            MenuTab::Outfits,
+            MenuTab::Customize,
+        ]
     }
 
     fn name(&self) -> &'static str {
@@ -71,14 +76,20 @@ impl CreatureMenu {
 
     pub fn next_tab(&mut self) {
         let tabs = MenuTab::all();
-        let current_idx = tabs.iter().position(|t| *t == self.current_tab).unwrap_or(0);
+        let current_idx = tabs
+            .iter()
+            .position(|t| *t == self.current_tab)
+            .unwrap_or(0);
         let next_idx = (current_idx + 1) % tabs.len();
         self.current_tab = tabs[next_idx];
     }
 
     pub fn prev_tab(&mut self) {
         let tabs = MenuTab::all();
-        let current_idx = tabs.iter().position(|t| *t == self.current_tab).unwrap_or(0);
+        let current_idx = tabs
+            .iter()
+            .position(|t| *t == self.current_tab)
+            .unwrap_or(0);
         let prev_idx = if current_idx == 0 {
             tabs.len() - 1
         } else {
@@ -239,9 +250,10 @@ impl CreatureMenu {
         }
 
         // Help text at bottom
-        let help = Paragraph::new("Tab/Shift+Tab: Switch tabs | j/k: Navigate | Enter: Select | t: Close")
-            .style(Style::default().fg(Color::DarkGray))
-            .alignment(Alignment::Center);
+        let help =
+            Paragraph::new("Tab/Shift+Tab: Switch tabs | j/k: Navigate | Enter: Select | t: Close")
+                .style(Style::default().fg(Color::DarkGray))
+                .alignment(Alignment::Center);
 
         let help_area = Rect {
             x: popup_area.x,
@@ -283,10 +295,7 @@ impl CreatureMenu {
             ]),
             Line::from(vec![
                 Span::styled("Species: ", Style::default().fg(Color::Gray)),
-                Span::styled(
-                    creature.species.name(),
-                    Style::default().fg(Color::Cyan),
-                ),
+                Span::styled(creature.species.name(), Style::default().fg(Color::Cyan)),
             ]),
             Line::from(""),
             Line::from(vec![
@@ -444,11 +453,7 @@ impl CreatureMenu {
             .collect();
 
         let list = List::new(items)
-            .block(
-                Block::default()
-                    .title(" Outfits ")
-                    .borders(Borders::ALL),
-            )
+            .block(Block::default().title(" Outfits ").borders(Borders::ALL))
             .highlight_style(Style::default().bg(Color::DarkGray));
 
         frame.render_stateful_widget(list, area, &mut self.outfit_list_state);
@@ -490,11 +495,7 @@ impl CreatureMenu {
             .collect();
 
         let list = List::new(items)
-            .block(
-                Block::default()
-                    .title(" Species ")
-                    .borders(Borders::ALL),
-            )
+            .block(Block::default().title(" Species ").borders(Borders::ALL))
             .highlight_style(Style::default().bg(Color::DarkGray));
 
         frame.render_stateful_widget(list, chunks[0], &mut self.species_list_state);
@@ -509,7 +510,10 @@ impl CreatureMenu {
                 Line::from(vec![
                     Span::styled(marker, Style::default().fg(Color::White)),
                     Span::raw(" "),
-                    Span::styled(format!("{:?}", c), Style::default().fg(c.to_ratatui_color())),
+                    Span::styled(
+                        format!("{:?}", c),
+                        Style::default().fg(c.to_ratatui_color()),
+                    ),
                 ])
             })
             .collect();

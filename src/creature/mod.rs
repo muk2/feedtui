@@ -245,16 +245,16 @@ impl Creature {
 /// Available creature species to choose from
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum CreatureSpecies {
-    Blob,      // Friendly slime creature
-    Bird,      // Chirpy bird
-    Cat,       // Classic cat companion
-    Dragon,    // Mini dragon
-    Fox,       // Clever fox
-    Owl,       // Wise owl
-    Penguin,   // Cute penguin
-    Robot,     // Friendly robot
-    Spirit,    // Mystical spirit
-    Octopus,   // Multi-tasking octopus
+    Blob,    // Friendly slime creature
+    Bird,    // Chirpy bird
+    Cat,     // Classic cat companion
+    Dragon,  // Mini dragon
+    Fox,     // Clever fox
+    Owl,     // Wise owl
+    Penguin, // Cute penguin
+    Robot,   // Friendly robot
+    Spirit,  // Mystical spirit
+    Octopus, // Multi-tasking octopus
 }
 
 impl Default for CreatureSpecies {
@@ -313,10 +313,10 @@ impl CreatureSpecies {
 /// Creature stats that can be improved
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreatureStats {
-    pub happiness: u8,    // 0-100
-    pub energy: u8,       // 0-100
-    pub knowledge: u8,    // 0-100
-    pub charisma: u8,     // 0-100
+    pub happiness: u8, // 0-100
+    pub energy: u8,    // 0-100
+    pub knowledge: u8, // 0-100
+    pub charisma: u8,  // 0-100
 }
 
 impl Default for CreatureStats {
@@ -439,21 +439,21 @@ pub struct Skill {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum SkillCategory {
-    Passive,      // Always active when equipped
-    Active,       // Can be triggered
-    Cosmetic,     // Visual effects only
-    Social,       // Affects emotes/interactions
+    Passive,  // Always active when equipped
+    Active,   // Can be triggered
+    Cosmetic, // Visual effects only
+    Social,   // Affects emotes/interactions
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SkillEffect {
-    XpBoost(f32),              // Multiplier for XP gain
-    RefreshBoost,              // Faster feed refresh
-    NewsDigest,                // Summarize news
-    StockAlert,                // Alert on stock changes
-    CustomEmote(String),       // Unlock special emote
+    XpBoost(f32),               // Multiplier for XP gain
+    RefreshBoost,               // Faster feed refresh
+    NewsDigest,                 // Summarize news
+    StockAlert,                 // Alert on stock changes
+    CustomEmote(String),        // Unlock special emote
     ColorUnlock(CreatureColor), // Unlock new color
-    Animation(String),         // Special animation
+    Animation(String),          // Special animation
 }
 
 /// Reward for leveling up
@@ -762,7 +762,12 @@ pub fn get_all_emotes() -> HashMap<String, Emote> {
         Emote {
             id: "stealth".to_string(),
             name: "Stealth".to_string(),
-            frames: vec!["...".to_string(), "..".to_string(), ".".to_string(), "".to_string()],
+            frames: vec![
+                "...".to_string(),
+                "..".to_string(),
+                ".".to_string(),
+                "".to_string(),
+            ],
             duration_ms: 200,
         },
     );

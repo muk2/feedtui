@@ -281,10 +281,7 @@ fn apply_outfit(outfit_id: &str, base_art: Vec<String>) -> Vec<String> {
             art
         }
         "astronaut" => {
-            let mut art = vec![
-                "  /===\\".to_string(),
-                " |     |".to_string(),
-            ]; // helmet
+            let mut art = vec!["  /===\\".to_string(), " |     |".to_string()]; // helmet
             art.extend(base_art);
             art
         }
@@ -299,10 +296,7 @@ fn apply_outfit(outfit_id: &str, base_art: Vec<String>) -> Vec<String> {
             art
         }
         "legendary" => {
-            let mut art = vec![
-                "  *****".to_string(),
-                "  *   *".to_string(),
-            ]; // crown
+            let mut art = vec!["  *****".to_string(), "  *   *".to_string()]; // crown
             art.extend(base_art);
             art
         }

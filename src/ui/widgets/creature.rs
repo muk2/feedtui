@@ -1,14 +1,14 @@
 use crate::config::CreatureConfig;
-use crate::creature::art::{get_creature_art, get_greeting, get_idle_message};
 use crate::creature::Creature;
+use crate::creature::art::{get_creature_art, get_greeting, get_idle_message};
 use crate::feeds::{FeedData, FeedFetcher};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Gauge, Paragraph},
-    Frame,
 };
 use std::time::Instant;
 
@@ -99,10 +99,10 @@ impl FeedWidget for CreatureWidget {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(8),  // Creature art
-                Constraint::Length(2),  // XP bar
-                Constraint::Length(2),  // Stats
-                Constraint::Min(1),     // Message/greeting
+                Constraint::Length(8), // Creature art
+                Constraint::Length(2), // XP bar
+                Constraint::Length(2), // Stats
+                Constraint::Min(1),    // Message/greeting
             ])
             .split(inner);
 
@@ -153,8 +153,12 @@ impl FeedWidget for CreatureWidget {
 impl CreatureWidget {
     fn render_creature_art(&self, frame: &mut Frame, area: Rect) {
         let outfit = self.creature.equipped_outfit.as_deref();
-        let art_lines =
-            get_creature_art(&self.creature.species, &self.creature.mood, outfit, self.animation_frame);
+        let art_lines = get_creature_art(
+            &self.creature.species,
+            &self.creature.mood,
+            outfit,
+            self.animation_frame,
+        );
 
         let color = self.creature.appearance.primary_color.to_ratatui_color();
 
@@ -197,7 +201,9 @@ impl CreatureWidget {
             Span::styled("Points: ", Style::default().fg(Color::White)),
             Span::styled(
                 format!("{}", self.creature.points),
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+                Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD),
             ),
             Span::raw("  |  "),
             Span::styled("Sessions: ", Style::default().fg(Color::White)),

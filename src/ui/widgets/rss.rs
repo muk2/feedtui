@@ -3,11 +3,11 @@ use crate::feeds::rss::RssFetcher;
 use crate::feeds::{FeedData, FeedFetcher, RssItem};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
-    Frame,
 };
 
 pub struct RssWidget {
@@ -37,7 +37,10 @@ impl RssWidget {
 
 impl FeedWidget for RssWidget {
     fn id(&self) -> String {
-        format!("rss-{}-{}", self.config.position.row, self.config.position.col)
+        format!(
+            "rss-{}-{}",
+            self.config.position.row, self.config.position.col
+        )
     }
 
     fn title(&self) -> &str {
@@ -79,10 +82,7 @@ impl FeedWidget for RssWidget {
             .enumerate()
             .map(|(i, item)| {
                 let title_line = Line::from(vec![
-                    Span::styled(
-                        format!("{}. ", i + 1),
-                        Style::default().fg(Color::DarkGray),
-                    ),
+                    Span::styled(format!("{}. ", i + 1), Style::default().fg(Color::DarkGray)),
                     Span::styled(&item.title, Style::default().fg(Color::White)),
                 ]);
 
@@ -104,13 +104,11 @@ impl FeedWidget for RssWidget {
             })
             .collect();
 
-        let list = List::new(items)
-            .block(block)
-            .highlight_style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
+        let list = List::new(items).block(block).highlight_style(
+            Style::default()
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        );
 
         let mut state = self.scroll_state.clone();
         frame.render_stateful_widget(list, area, &mut state);

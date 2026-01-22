@@ -3,11 +3,11 @@ use crate::feeds::sports::SportsFetcher;
 use crate::feeds::{FeedData, FeedFetcher, SportsEvent};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
+    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
-    Frame,
 };
 
 pub struct SportsWidget {
@@ -37,7 +37,10 @@ impl SportsWidget {
 
 impl FeedWidget for SportsWidget {
     fn id(&self) -> String {
-        format!("sports-{}-{}", self.config.position.row, self.config.position.col)
+        format!(
+            "sports-{}-{}",
+            self.config.position.row, self.config.position.col
+        )
     }
 
     fn title(&self) -> &str {
@@ -120,13 +123,11 @@ impl FeedWidget for SportsWidget {
             })
             .collect();
 
-        let list = List::new(items)
-            .block(block)
-            .highlight_style(
-                Style::default()
-                    .bg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            );
+        let list = List::new(items).block(block).highlight_style(
+            Style::default()
+                .bg(Color::DarkGray)
+                .add_modifier(Modifier::BOLD),
+        );
 
         let mut state = self.scroll_state.clone();
         frame.render_stateful_widget(list, area, &mut state);
