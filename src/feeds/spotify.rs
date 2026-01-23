@@ -25,15 +25,22 @@ impl SpotifyFetcher {
             ..Default::default()
         };
 
-        let mut client = AuthCodeSpotify::new(creds, oauth);
+        // Create a token with the refresh token
+        let token = rspotify::Token {
+            refresh_token: Some(refresh_token),
+            ..Default::default()
+        };
 
-        // Set the refresh token
-        if let Ok(mut token) = client.token.lock() {
-            *token = Some(rspotify::Token {
-                refresh_token: Some(refresh_token),
+        // Create the client with the token and config
+        let client = AuthCodeSpotify::from_token_with_config(
+            token,
+            creds,
+            oauth,
+            rspotify::Config {
+                token_refreshing: true,
                 ..Default::default()
-            });
-        }
+            },
+        );
 
         Self { client }
     }
@@ -82,14 +89,14 @@ impl FeedFetcher for SpotifyFetcher {
                             Some(track.name),
                             Some(artists),
                             Some(track.album.name),
-                            Some(track.duration.as_millis() as u32),
+                            Some(track.duration.num_milliseconds() as u32),
                         )
                     }
                     Some(PlayableItem::Episode(episode)) => (
                         Some(episode.name),
                         Some(episode.show.publisher),
                         Some(episode.show.name),
-                        Some(episode.duration.as_millis() as u32),
+                        Some(episode.duration.num_milliseconds() as u32),
                     ),
                     None => (None, None, None, None),
                 };
@@ -105,7 +112,7 @@ impl FeedFetcher for SpotifyFetcher {
                     track_name,
                     artist_name,
                     album_name,
-                    progress_ms: playback.progress.map(|d| d.as_millis() as u32),
+                    progress_ms: playback.progress.map(|d| d.num_milliseconds() as u32),
                     duration_ms,
                     shuffle_state: playback.shuffle_state,
                     repeat_state,

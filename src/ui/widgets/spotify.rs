@@ -150,11 +150,11 @@ impl FeedWidget for SpotifyWidget {
             let bar = format!("[{}{}]", "━".repeat(filled), "─".repeat(empty));
 
             lines.push(Line::from(vec![
-                Span::styled(&progress_str, Style::default().fg(Color::DarkGray)),
+                Span::styled(progress_str, Style::default().fg(Color::DarkGray)),
                 Span::styled(" ", Style::default()),
-                Span::styled(&bar, Style::default().fg(Color::Green)),
+                Span::styled(bar, Style::default().fg(Color::Green)),
                 Span::styled(" ", Style::default()),
-                Span::styled(&duration_str, Style::default().fg(Color::DarkGray)),
+                Span::styled(duration_str, Style::default().fg(Color::DarkGray)),
             ]));
         }
 

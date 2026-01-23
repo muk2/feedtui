@@ -1,8 +1,6 @@
 use crate::config::GithubConfig;
 use crate::feeds::github::GithubFetcher;
-use crate::feeds::{
-    FeedData, FeedFetcher, GithubCommit, GithubDashboard, GithubNotification, GithubPullRequest,
-};
+use crate::feeds::{FeedData, FeedFetcher, GithubDashboard};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
     Frame,
@@ -151,7 +149,7 @@ impl GithubWidget {
             .pull_requests
             .iter()
             .enumerate()
-            .map(|(i, pr)| {
+            .map(|(_i, pr)| {
                 let status_icon = if pr.draft {
                     "📝 "
                 } else if pr.state == "open" {
@@ -195,7 +193,7 @@ impl GithubWidget {
             .commits
             .iter()
             .enumerate()
-            .map(|(i, commit)| {
+            .map(|(_i, commit)| {
                 let title_line = Line::from(vec![
                     Span::styled(
                         format!("🔹 {} ", &commit.sha),
