@@ -2,6 +2,7 @@ pub mod github;
 pub mod hackernews;
 pub mod rss;
 pub mod sports;
+pub mod spotify;
 pub mod stocks;
 
 use anyhow::Result;
@@ -20,6 +21,7 @@ pub enum FeedData {
     Rss(Vec<RssItem>),
     Sports(Vec<SportsEvent>),
     Github(GithubDashboard),
+    Spotify(SpotifyPlayback),
     Loading,
     Error(String),
 }
@@ -110,6 +112,18 @@ pub struct GithubDashboard {
     pub notifications: Vec<GithubNotification>,
     pub pull_requests: Vec<GithubPullRequest>,
     pub commits: Vec<GithubCommit>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct SpotifyPlayback {
+    pub is_playing: bool,
+    pub track_name: Option<String>,
+    pub artist_name: Option<String>,
+    pub album_name: Option<String>,
+    pub progress_ms: Option<u32>,
+    pub duration_ms: Option<u32>,
+    pub shuffle_state: bool,
+    pub repeat_state: String,
 }
 
 #[async_trait]

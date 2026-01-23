@@ -44,6 +44,7 @@ pub enum WidgetConfig {
     Rss(RssConfig),
     Creature(CreatureConfig),
     Github(GithubConfig),
+    Spotify(SpotifyConfig),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -177,6 +178,20 @@ fn default_max_pull_requests() -> usize {
 
 fn default_max_commits() -> usize {
     10
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SpotifyConfig {
+    #[serde(default = "default_spotify_title")]
+    pub title: String,
+    pub client_id: String,
+    pub client_secret: String,
+    pub refresh_token: String,
+    pub position: Position,
+}
+
+fn default_spotify_title() -> String {
+    "Spotify".to_string()
 }
 
 impl Config {

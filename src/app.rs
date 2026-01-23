@@ -6,7 +6,7 @@ use crate::feeds::{FeedData, FeedMessage};
 use crate::ui::creature_menu::CreatureMenu;
 use crate::ui::widgets::{
     FeedWidget, creature::CreatureWidget, github::GithubWidget, hackernews::HackernewsWidget,
-    rss::RssWidget, sports::SportsWidget, stocks::StocksWidget,
+    rss::RssWidget, sports::SportsWidget, spotify::SpotifyWidget, stocks::StocksWidget,
 };
 use anyhow::Result;
 use crossterm::{
@@ -58,6 +58,7 @@ impl App {
                 WidgetConfig::Rss(cfg) => Box::new(RssWidget::new(cfg.clone())),
                 WidgetConfig::Sports(cfg) => Box::new(SportsWidget::new(cfg.clone())),
                 WidgetConfig::Github(cfg) => Box::new(GithubWidget::new(cfg.clone())),
+                WidgetConfig::Spotify(cfg) => Box::new(SpotifyWidget::new(cfg.clone())),
                 WidgetConfig::Creature(cfg) => {
                     creature_widget_idx = Some(widgets.len());
                     Box::new(CreatureWidget::new(cfg.clone(), creature.clone()))
@@ -197,6 +198,9 @@ impl App {
                     KeyCode::Up | KeyCode::Char('k') => self.scroll_up(),
                     KeyCode::Left | KeyCode::Char('h') => self.switch_tab_prev(),
                     KeyCode::Right | KeyCode::Char('l') => self.switch_tab_next(),
+                    KeyCode::Char(' ') => self.spotify_play_pause(),
+                    KeyCode::Char('n') => self.spotify_next_track(),
+                    KeyCode::Char('p') => self.spotify_previous_track(),
                     _ => {}
                 }
             }
@@ -320,6 +324,54 @@ impl App {
                     .and_then(|w| w.downcast_mut::<GithubWidget>())
                 {
                     github_widget.prev_tab();
+                }
+            }
+        }
+    }
+
+    fn spotify_play_pause(&self) {
+        if !self.widgets.is_empty() {
+            if let Some(widget) = self.widgets.get(self.selected_widget) {
+                if let Some(spotify_widget) = widget
+                    .as_any()
+                    .and_then(|w| w.downcast_ref::<SpotifyWidget>())
+                {
+                    let fetcher = spotify_widget.get_fetcher();
+                    tokio::spawn(async move {
+                        let _ = fetcher.play_pause().await;
+                    });
+                }
+            }
+        }
+    }
+
+    fn spotify_next_track(&self) {
+        if !self.widgets.is_empty() {
+            if let Some(widget) = self.widgets.get(self.selected_widget) {
+                if let Some(spotify_widget) = widget
+                    .as_any()
+                    .and_then(|w| w.downcast_ref::<SpotifyWidget>())
+                {
+                    let fetcher = spotify_widget.get_fetcher();
+                    tokio::spawn(async move {
+                        let _ = fetcher.next_track().await;
+                    });
+                }
+            }
+        }
+    }
+
+    fn spotify_previous_track(&self) {
+        if !self.widgets.is_empty() {
+            if let Some(widget) = self.widgets.get(self.selected_widget) {
+                if let Some(spotify_widget) = widget
+                    .as_any()
+                    .and_then(|w| w.downcast_ref::<SpotifyWidget>())
+                {
+                    let fetcher = spotify_widget.get_fetcher();
+                    tokio::spawn(async move {
+                        let _ = fetcher.previous_track().await;
+                    });
                 }
             }
         }

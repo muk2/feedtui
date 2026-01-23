@@ -63,3 +63,18 @@ max_notifications = 20
 max_pull_requests = 10
 max_commits = 10
 position = { row = 1, col = 2 }
+
+# Spotify Player - control your music playback
+# Requires Spotify API credentials (client_id, client_secret, refresh_token)
+# To get credentials:
+# 1. Create an app at https://developer.spotify.com/dashboard
+# 2. Set redirect URI to http://localhost:8888/callback
+# 3. Get authorization code and exchange for refresh token
+# Controls: Space = Play/Pause, n = Next, p = Previous
+# [[widgets]]
+# type = "spotify"
+# title = "Spotify"
+# client_id = "${SPOTIFY_CLIENT_ID}"
+# client_secret = "${SPOTIFY_CLIENT_SECRET}"
+# refresh_token = "${SPOTIFY_REFRESH_TOKEN}"
+# position = { row = 2, col = 0 }

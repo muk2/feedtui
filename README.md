@@ -8,6 +8,8 @@ A configurable terminal dashboard for browsing news, stocks, sports, and more - 
 - **Stock Ticker** - Track your portfolio in real-time
 - **RSS Feeds** - Subscribe to your favorite news sources
 - **Sports Scores** - Follow NBA, NFL, EPL, and more
+- **GitHub Dashboard** - View notifications, pull requests, and commits
+- **Spotify Player** - Control music playback (play/pause, next, previous)
 - **Tui** - Your virtual companion creature that levels up as you use the terminal!
 
 ## Installation
@@ -55,6 +57,10 @@ Tui (pronounced "chew-ee") is your virtual companion creature that lives in your
 | `t` | Toggle Tui menu |
 | `Tab` / `Shift+Tab` | Switch between menu tabs / widgets |
 | `j` / `k` or arrows | Navigate lists |
+| `h` / `l` or Left/Right arrows | Switch GitHub tabs |
+| `Space` | Spotify: Play/Pause (when Spotify widget selected) |
+| `n` | Spotify: Next track (when Spotify widget selected) |
+| `p` | Spotify: Previous track (when Spotify widget selected) |
 | `Enter` | Select/purchase items in menu |
 | `r` | Refresh feeds |
 | `q` | Quit |
@@ -117,6 +123,39 @@ title = "Portfolio"
 symbols = ["AAPL", "GOOGL", "MSFT"]
 position = { row = 1, col = 0 }
 ```
+
+## Spotify Setup
+
+To use the Spotify widget, you need to obtain API credentials:
+
+1. **Create a Spotify App**:
+   - Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+   - Create a new app
+   - Set the redirect URI to `http://localhost:8888/callback`
+   - Note your Client ID and Client Secret
+
+2. **Get a Refresh Token**:
+   - Use the Spotify OAuth flow to obtain an authorization code
+   - Exchange the authorization code for a refresh token
+   - You can use tools like [spotify-token-swap](https://github.com/tobika/spotify-token-swap) or write your own
+
+3. **Configure the Widget**:
+   - Add the Spotify widget to your `~/.feedtui/config.toml`:
+
+   ```toml
+   [[widgets]]
+   type = "spotify"
+   title = "Spotify"
+   client_id = "your_client_id"
+   client_secret = "your_client_secret"
+   refresh_token = "your_refresh_token"
+   position = { row = 2, col = 0 }
+   ```
+
+4. **Required Scopes**:
+   - `user-read-playback-state`
+   - `user-modify-playback-state`
+   - `user-read-currently-playing`
 
 ## License
 

@@ -3,6 +3,7 @@ pub mod github;
 pub mod hackernews;
 pub mod rss;
 pub mod sports;
+pub mod spotify;
 pub mod stocks;
 
 use crate::feeds::{FeedData, FeedFetcher};
