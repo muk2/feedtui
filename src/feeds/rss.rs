@@ -37,16 +37,25 @@ impl RssFetcher {
             .entries
             .into_iter()
             .take(self.max_items)
-            .map(|entry| RssItem {
-                title: entry
-                    .title
-                    .map(|t| t.content)
-                    .unwrap_or_else(|| "No title".to_string()),
-                link: entry.links.first().map(|l| l.href.clone()),
-                published: entry
-                    .published
-                    .map(|d| d.format("%Y-%m-%d %H:%M").to_string()),
-                source: source_name.clone(),
+            .map(|entry| {
+                // Get description from summary or content
+                let description = entry
+                    .summary
+                    .map(|s| s.content)
+                    .or_else(|| entry.content.and_then(|c| c.body));
+
+                RssItem {
+                    title: entry
+                        .title
+                        .map(|t| t.content)
+                        .unwrap_or_else(|| "No title".to_string()),
+                    link: entry.links.first().map(|l| l.href.clone()),
+                    published: entry
+                        .published
+                        .map(|d| d.format("%Y-%m-%d %H:%M").to_string()),
+                    source: source_name.clone(),
+                    description,
+                }
             })
             .collect();
 
