@@ -11,6 +11,19 @@ readme = "README.md"
 keywords = ["tui", "dashboard", "terminal", "rss", "stocks"]
 categories = ["command-line-utilities"]
 
+[lib]
+name = "feedtui"
+path = "src/lib.rs"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "feedtui"
+path = "src/main.rs"
+
+[features]
+default = []
+ffi = []
+
 [dependencies]
 ratatui = "0.29"
 crossterm = "0.28"
