@@ -113,10 +113,7 @@ fn init_config(force: bool) -> Result<()> {
     io::stdout().flush()?;
     let mut refresh_input = String::new();
     io::stdin().read_line(&mut refresh_input)?;
-    let refresh_interval = refresh_input
-        .trim()
-        .parse::<u64>()
-        .unwrap_or(60);
+    let refresh_interval = refresh_input.trim().parse::<u64>().unwrap_or(60);
 
     // Prompt for theme
     print!("Theme (dark/light) [dark]: ");

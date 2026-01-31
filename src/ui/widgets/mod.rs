@@ -7,7 +7,7 @@ pub mod stocks;
 pub mod youtube;
 
 use crate::feeds::{FeedData, FeedFetcher};
-use ratatui::{Frame, layout::Rect};
+use ratatui::{layout::Rect, Frame};
 use std::any::Any;
 
 /// Information about a selected feed item for reading or opening

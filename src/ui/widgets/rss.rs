@@ -3,11 +3,11 @@ use crate::feeds::rss::RssFetcher;
 use crate::feeds::{FeedData, FeedFetcher, RssItem};
 use crate::ui::widgets::{FeedWidget, SelectedItem};
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
+    Frame,
 };
 
 pub struct RssWidget {

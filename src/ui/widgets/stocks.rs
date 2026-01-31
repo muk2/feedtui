@@ -3,11 +3,11 @@ use crate::feeds::stocks::StocksFetcher;
 use crate::feeds::{FeedData, FeedFetcher, StockQuote};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
+    Frame,
 };
 
 pub struct StocksWidget {

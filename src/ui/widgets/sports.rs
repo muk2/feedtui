@@ -3,11 +3,11 @@ use crate::feeds::sports::SportsFetcher;
 use crate::feeds::{FeedData, FeedFetcher, SportsEvent};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
+    Frame,
 };
 
 pub struct SportsWidget {
