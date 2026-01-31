@@ -1,7 +1,7 @@
 use crate::config::YoutubeConfig;
 use crate::feeds::youtube::YoutubeFetcher;
 use crate::feeds::{FeedData, FeedFetcher, YoutubeVideo};
-use crate::ui::widgets::FeedWidget;
+use crate::ui::widgets::{FeedWidget, SelectedItem};
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
@@ -182,5 +182,33 @@ impl FeedWidget for YoutubeWidget {
 
     fn set_selected(&mut self, selected: bool) {
         self.selected = selected;
+    }
+
+    fn get_selected_item(&self) -> Option<SelectedItem> {
+        let idx = self.scroll_state.selected()?;
+        let video = self.videos.get(idx)?;
+
+        let url = Some(format!("https://www.youtube.com/watch?v={}", video.id));
+
+        let mut metadata_parts = vec![video.channel.clone()];
+        if let Some(ref views) = video.view_count {
+            metadata_parts.push(views.clone());
+        }
+        if let Some(ref duration) = video.duration {
+            metadata_parts.push(duration.clone());
+        }
+        metadata_parts.push(video.published.clone());
+
+        Some(SelectedItem {
+            title: video.title.clone(),
+            url,
+            description: Some(video.description.clone()),
+            source: video.channel.clone(),
+            metadata: Some(metadata_parts.join(" | ")),
+        })
+    }
+
+    fn get_selected_discussion_url(&self) -> Option<String> {
+        None
     }
 }

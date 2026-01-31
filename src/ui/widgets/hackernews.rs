@@ -1,7 +1,7 @@
 use crate::config::HackernewsConfig;
 use crate::feeds::hackernews::HnFetcher;
 use crate::feeds::{FeedData, FeedFetcher, HnStory};
-use crate::ui::widgets::FeedWidget;
+use crate::ui::widgets::{FeedWidget, SelectedItem};
 use ratatui::{
     Frame,
     layout::Rect,
@@ -157,5 +157,34 @@ impl FeedWidget for HackernewsWidget {
 
     fn set_selected(&mut self, selected: bool) {
         self.selected = selected;
+    }
+
+    fn get_selected_item(&self) -> Option<SelectedItem> {
+        let idx = self.scroll_state.selected()?;
+        let story = self.stories.get(idx)?;
+
+        // For HN, if no direct URL, use the HN discussion page
+        let url = story
+            .url
+            .clone()
+            .or_else(|| Some(format!("https://news.ycombinator.com/item?id={}", story.id)));
+
+        Some(SelectedItem {
+            title: story.title.clone(),
+            url,
+            description: None,
+            source: "Hacker News".to_string(),
+            metadata: Some(format!(
+                "{} points | {} comments | by {}",
+                story.score, story.descendants, story.by
+            )),
+        })
+    }
+
+    /// Get the HN discussion URL for the selected story
+     fn get_selected_discussion_url(&self) -> Option<String>{
+        let idx = self.scroll_state.selected()?;
+        let story = self.stories.get(idx)?;
+        Some(format!("https://news.ycombinator.com/item?id={}", story.id))
     }
 }

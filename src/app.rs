@@ -3,6 +3,7 @@ use crate::creature::Creature;
 use crate::creature::persistence::{default_creature_path, load_or_create_creature, save_creature};
 use crate::event::{Event, EventHandler};
 use crate::feeds::{FeedData, FeedMessage};
+use crate::ui::article_reader::ArticleReader;
 use crate::ui::creature_menu::CreatureMenu;
 use crate::ui::widgets::{
     FeedWidget, creature::CreatureWidget, github::GithubWidget, hackernews::HackernewsWidget,
@@ -17,7 +18,7 @@ use crossterm::{
 use ratatui::{
     Frame, Terminal,
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
 };
 use std::io::{self, Stdout};
 use std::path::PathBuf;
@@ -35,6 +36,8 @@ pub struct App {
     creature_widget_idx: Option<usize>,
     last_xp_tick: Instant,
     creature_menu: CreatureMenu,
+    article_reader: ArticleReader,
+    status_message: Option<(String, Instant)>,
 }
 
 impl App {
@@ -78,6 +81,8 @@ impl App {
             creature_widget_idx,
             last_xp_tick: Instant::now(),
             creature_menu: CreatureMenu::default(),
+            article_reader: ArticleReader::default(),
+            status_message: None,
         }
     }
 
@@ -102,6 +107,9 @@ impl App {
         while !self.should_quit {
             // Update creature
             self.tick_creature();
+
+            // Clear expired status messages
+            self.clear_expired_status();
 
             // Draw UI
             terminal.draw(|frame| self.render(frame))?;
@@ -154,6 +162,20 @@ impl App {
     fn handle_event(&mut self, event: Event) {
         match event {
             Event::Key(key) => {
+                // If article reader is visible, route events there first
+                if self.article_reader.visible {
+                    match key.code {
+                        KeyCode::Esc | KeyCode::Char('q') => self.article_reader.hide(),
+                        KeyCode::Down | KeyCode::Char('j') => self.article_reader.scroll_down(),
+                        KeyCode::Up | KeyCode::Char('k') => self.article_reader.scroll_up(),
+                        KeyCode::PageDown => self.article_reader.page_down(10),
+                        KeyCode::PageUp => self.article_reader.page_up(10),
+                        KeyCode::Char('o') => self.open_current_in_browser(),
+                        _ => {}
+                    }
+                    return;
+                }
+
                 // If creature menu is visible, route events there
                 if self.creature_menu.visible {
                     match key.code {
@@ -192,6 +214,8 @@ impl App {
                     }
                     KeyCode::Char('r') => self.refresh_all(),
                     KeyCode::Char('t') => self.toggle_creature_menu(),
+                    KeyCode::Char('o') => self.open_selected_in_browser(),
+                    KeyCode::Enter => self.open_article_reader(),
                     KeyCode::Tab => self.next_widget(),
                     KeyCode::BackTab => self.prev_widget(),
                     KeyCode::Down | KeyCode::Char('j') => self.scroll_down(),
@@ -369,6 +393,39 @@ impl App {
                 self.creature_menu.render(frame, area, &creature);
             }
         }
+
+        // Render article reader overlay if visible
+        if self.article_reader.visible {
+            self.article_reader.render(frame, area);
+        }
+
+        // Render status message if present
+        self.render_status_message(frame, area);
+    }
+
+    fn render_status_message(&self, frame: &mut Frame, area: Rect) {
+        if let Some((message, _)) = &self.status_message {
+            use ratatui::widgets::{Block, Borders, Clear, Paragraph};
+            use ratatui::style::{Color, Style};
+
+            let width = (message.len() + 4).min(area.width as usize) as u16;
+            let x = area.width.saturating_sub(width).saturating_sub(2);
+            let y = area.height.saturating_sub(3);
+
+            let status_area = Rect::new(x, y, width, 3);
+
+            frame.render_widget(Clear, status_area);
+
+            let paragraph = Paragraph::new(message.as_str())
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_style(Style::default().fg(Color::Yellow)),
+                )
+                .style(Style::default().fg(Color::White));
+
+            frame.render_widget(paragraph, status_area);
+        }
     }
 
     fn calculate_grid_dimensions(&self) -> (usize, usize) {
@@ -402,6 +459,72 @@ impl App {
                         self.last_xp_tick = Instant::now();
                     }
                 }
+            }
+        }
+    }
+
+    /// Open the article reader for the currently selected item
+    fn open_article_reader(&mut self) {
+        if self.widgets.is_empty() {
+            return;
+        }
+
+        if let Some(widget) = self.widgets.get(self.selected_widget) {
+            if let Some(item) = widget.get_selected_item() {
+                self.article_reader.show(item);
+            } else {
+                self.set_status("No item selected");
+            }
+        }
+    }
+
+    /// Open the selected item in the default browser
+    fn open_selected_in_browser(&mut self) {
+        if self.widgets.is_empty() {
+            return;
+        }
+
+        if let Some(widget) = self.widgets.get(self.selected_widget) {
+            if let Some(item) = widget.get_selected_item() {
+                if let Some(url) = item.url {
+                    self.open_url(&url);
+                } else {
+                    self.set_status("No URL available");
+                }
+            } else {
+                self.set_status("No item selected");
+            }
+        }
+    }
+
+    /// Open the current article reader item in browser
+    fn open_current_in_browser(&mut self) {
+        if let Some(url) = self.article_reader.get_url() {
+            let url = url.to_string();
+            self.open_url(&url);
+        } else {
+            self.set_status("No URL available");
+        }
+    }
+
+    /// Open a URL in the default browser
+    fn open_url(&mut self, url: &str) {
+        match open::that(url) {
+            Ok(_) => self.set_status("Opening in browser..."),
+            Err(e) => self.set_status(&format!("Failed to open browser: {}", e)),
+        }
+    }
+
+    /// Set a status message that will be displayed briefly
+    fn set_status(&mut self, message: &str) {
+        self.status_message = Some((message.to_string(), Instant::now()));
+    }
+
+    /// Clear expired status messages
+    fn clear_expired_status(&mut self) {
+        if let Some((_, time)) = &self.status_message {
+            if time.elapsed() > Duration::from_secs(3) {
+                self.status_message = None;
             }
         }
     }

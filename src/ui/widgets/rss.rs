@@ -1,7 +1,7 @@
 use crate::config::RssConfig;
 use crate::feeds::rss::RssFetcher;
 use crate::feeds::{FeedData, FeedFetcher, RssItem};
-use crate::ui::widgets::FeedWidget;
+use crate::ui::widgets::{FeedWidget, SelectedItem};
 use ratatui::{
     Frame,
     layout::Rect,
@@ -156,5 +156,22 @@ impl FeedWidget for RssWidget {
 
     fn set_selected(&mut self, selected: bool) {
         self.selected = selected;
+    }
+
+    fn get_selected_item(&self) -> Option<SelectedItem> {
+        let idx = self.scroll_state.selected()?;
+        let item = self.items.get(idx)?;
+
+        Some(SelectedItem {
+            title: item.title.clone(),
+            url: item.link.clone(),
+            description: item.description.clone(),
+            source: item.source.clone(),
+            metadata: item.published.clone(),
+        })
+    }
+
+    fn get_selected_discussion_url(&self) -> Option<String> {
+        None
     }
 }

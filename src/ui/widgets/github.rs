@@ -1,8 +1,6 @@
 use crate::config::GithubConfig;
 use crate::feeds::github::GithubFetcher;
-use crate::feeds::{
-    FeedData, FeedFetcher, GithubCommit, GithubDashboard, GithubNotification, GithubPullRequest,
-};
+use crate::feeds::{FeedData, FeedFetcher, GithubDashboard};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
     Frame,
@@ -108,7 +106,7 @@ impl GithubWidget {
         tabs
     }
 
-    fn render_notifications(&self) -> Vec<ListItem> {
+    fn render_notifications(&self) -> Vec<ListItem<'_>> {
         self.dashboard
             .notifications
             .iter()
@@ -146,12 +144,12 @@ impl GithubWidget {
             .collect()
     }
 
-    fn render_pull_requests(&self) -> Vec<ListItem> {
+    fn render_pull_requests(&self) -> Vec<ListItem<'_>> {
         self.dashboard
             .pull_requests
             .iter()
             .enumerate()
-            .map(|(i, pr)| {
+            .map(|(_i, pr)| {
                 let status_icon = if pr.draft {
                     "📝 "
                 } else if pr.state == "open" {
@@ -190,12 +188,12 @@ impl GithubWidget {
             .collect()
     }
 
-    fn render_commits(&self) -> Vec<ListItem> {
+    fn render_commits(&self) -> Vec<ListItem<'_>> {
         self.dashboard
             .commits
             .iter()
             .enumerate()
-            .map(|(i, commit)| {
+            .map(|(_i, commit)| {
                 let title_line = Line::from(vec![
                     Span::styled(
                         format!("🔹 {} ", &commit.sha),
@@ -416,5 +414,9 @@ impl FeedWidget for GithubWidget {
 
     fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
         Some(self)
+    }
+
+    fn get_selected_discussion_url(&self) -> Option<String> {
+        None
     }
 }

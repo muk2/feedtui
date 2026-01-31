@@ -10,6 +10,16 @@ use crate::feeds::{FeedData, FeedFetcher};
 use ratatui::{Frame, layout::Rect};
 use std::any::Any;
 
+/// Information about a selected feed item for reading or opening
+#[derive(Debug, Clone)]
+pub struct SelectedItem {
+    pub title: String,
+    pub url: Option<String>,
+    pub description: Option<String>,
+    pub source: String,
+    pub metadata: Option<String>,
+}
+
 pub trait FeedWidget: Send + Sync {
     fn id(&self) -> String;
     fn title(&self) -> &str;
@@ -21,6 +31,11 @@ pub trait FeedWidget: Send + Sync {
     fn scroll_down(&mut self);
     fn set_selected(&mut self, selected: bool);
 
+    /// Get the currently selected item's information
+    fn get_selected_item(&self) -> Option<SelectedItem> {
+        None
+    }
+
     /// For downcasting to concrete types
     fn as_any(&self) -> Option<&dyn Any> {
         None
@@ -30,4 +45,7 @@ pub trait FeedWidget: Send + Sync {
     fn as_any_mut(&mut self) -> Option<&mut dyn Any> {
         None
     }
+    fn get_selected_discussion_url(&self) -> Option<String>;
+
+    
 }

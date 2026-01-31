@@ -51,6 +51,7 @@ pub struct RssItem {
     pub link: Option<String>,
     pub published: Option<String>,
     pub source: String,
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Clone)]

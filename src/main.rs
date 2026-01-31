@@ -130,12 +130,12 @@ fn init_config(force: bool) -> Result<()> {
     println!("\n=== Widget Configuration ===");
     println!("Which widgets would you like to enable?\n");
 
-    let mut enable_creature = prompt_yes_no("Enable Tui creature companion?", true)?;
-    let mut enable_hackernews = prompt_yes_no("Enable Hacker News?", true)?;
-    let mut enable_stocks = prompt_yes_no("Enable stock ticker?", true)?;
-    let mut enable_rss = prompt_yes_no("Enable RSS feeds?", true)?;
-    let mut enable_sports = prompt_yes_no("Enable sports scores?", false)?;
-    let mut enable_github = prompt_yes_no("Enable GitHub dashboard?", false)?;
+    let enable_creature = prompt_yes_no("Enable Tui creature companion?", true)?;
+    let enable_hackernews = prompt_yes_no("Enable Hacker News?", true)?;
+    let enable_stocks = prompt_yes_no("Enable stock ticker?", true)?;
+    let enable_rss = prompt_yes_no("Enable RSS feeds?", true)?;
+    let enable_sports = prompt_yes_no("Enable sports scores?", false)?;
+    let enable_github = prompt_yes_no("Enable GitHub dashboard?", false)?;
 
     // Build config content
     let mut config_content = format!(

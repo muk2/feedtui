@@ -173,4 +173,8 @@ impl FeedWidget for SportsWidget {
     fn set_selected(&mut self, selected: bool) {
         self.selected = selected;
     }
+
+    fn get_selected_discussion_url(&self) -> Option<String> {
+        None
+    }
 }

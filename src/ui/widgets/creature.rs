@@ -148,6 +148,10 @@ impl FeedWidget for CreatureWidget {
     fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
         Some(self)
     }
+
+    fn get_selected_discussion_url(&self) -> Option<String> {
+        None
+    }
 }
 
 impl CreatureWidget {
