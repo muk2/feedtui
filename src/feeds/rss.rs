@@ -47,6 +47,7 @@ impl RssFetcher {
                     .published
                     .map(|d| d.format("%Y-%m-%d %H:%M").to_string()),
                 source: source_name.clone(),
+                description: entry.summary.map(|s| s.content),
             })
             .collect();
 

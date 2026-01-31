@@ -64,8 +64,8 @@ impl FeedWidget for YoutubeWidget {
             .border_style(border_style);
 
         if self.loading && self.videos.is_empty() {
-            let loading_text = List::new(vec![ListItem::new("Loading YouTube videos...")])
-                .block(block);
+            let loading_text =
+                List::new(vec![ListItem::new("Loading YouTube videos...")]).block(block);
             frame.render_widget(loading_text, area);
             return;
         }
@@ -90,10 +90,7 @@ impl FeedWidget for YoutubeWidget {
             .map(|(i, video)| {
                 // Title line with numbering
                 let title_line = Line::from(vec![
-                    Span::styled(
-                        format!("{}. ", i + 1),
-                        Style::default().fg(Color::DarkGray),
-                    ),
+                    Span::styled(format!("{}. ", i + 1), Style::default().fg(Color::DarkGray)),
                     Span::styled(&video.title, Style::default().fg(Color::White)),
                 ]);
 
@@ -182,5 +179,12 @@ impl FeedWidget for YoutubeWidget {
 
     fn set_selected(&mut self, selected: bool) {
         self.selected = selected;
+    }
+
+    fn get_selected_url(&self) -> Option<String> {
+        self.scroll_state
+            .selected()
+            .and_then(|idx| self.videos.get(idx))
+            .map(|video| format!("https://www.youtube.com/watch?v={}", video.id))
     }
 }

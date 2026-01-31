@@ -7,7 +7,7 @@ pub mod stocks;
 pub mod youtube;
 
 use crate::feeds::{FeedData, FeedFetcher};
-use ratatui::{Frame, layout::Rect};
+use ratatui::{layout::Rect, Frame};
 use std::any::Any;
 
 pub trait FeedWidget: Send + Sync {
@@ -20,6 +20,11 @@ pub trait FeedWidget: Send + Sync {
     fn scroll_up(&mut self);
     fn scroll_down(&mut self);
     fn set_selected(&mut self, selected: bool);
+
+    /// Get the URL of the currently selected item (if any)
+    fn get_selected_url(&self) -> Option<String> {
+        None
+    }
 
     /// For downcasting to concrete types
     fn as_any(&self) -> Option<&dyn Any> {

@@ -5,11 +5,11 @@ use crate::feeds::{
 };
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState, Tabs},
+    Frame,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -416,5 +416,20 @@ impl FeedWidget for GithubWidget {
 
     fn as_any_mut(&mut self) -> Option<&mut dyn std::any::Any> {
         Some(self)
+    }
+
+    fn get_selected_url(&self) -> Option<String> {
+        let idx = self.scroll_state.selected()?;
+        match self.current_tab {
+            DashboardTab::Notifications => {
+                self.dashboard.notifications.get(idx).map(|n| n.url.clone())
+            }
+            DashboardTab::PullRequests => self
+                .dashboard
+                .pull_requests
+                .get(idx)
+                .map(|pr| format!("https://github.com/{}/pull/{}", pr.repository, pr.number)),
+            DashboardTab::Commits => self.dashboard.commits.get(idx).map(|c| c.url.clone()),
+        }
     }
 }

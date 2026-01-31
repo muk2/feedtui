@@ -3,11 +3,11 @@ use crate::feeds::rss::RssFetcher;
 use crate::feeds::{FeedData, FeedFetcher, RssItem};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
+    Frame,
 };
 
 pub struct RssWidget {
@@ -156,5 +156,12 @@ impl FeedWidget for RssWidget {
 
     fn set_selected(&mut self, selected: bool) {
         self.selected = selected;
+    }
+
+    fn get_selected_url(&self) -> Option<String> {
+        self.scroll_state
+            .selected()
+            .and_then(|idx| self.items.get(idx))
+            .and_then(|item| item.link.clone())
     }
 }

@@ -3,11 +3,11 @@ use crate::feeds::hackernews::HnFetcher;
 use crate::feeds::{FeedData, FeedFetcher, HnStory};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState},
+    Frame,
 };
 
 pub struct HackernewsWidget {
@@ -157,5 +157,18 @@ impl FeedWidget for HackernewsWidget {
 
     fn set_selected(&mut self, selected: bool) {
         self.selected = selected;
+    }
+
+    fn get_selected_url(&self) -> Option<String> {
+        self.scroll_state
+            .selected()
+            .and_then(|idx| self.stories.get(idx))
+            .and_then(|story| {
+                // Prefer the story URL, fall back to HN comments page
+                story
+                    .url
+                    .clone()
+                    .or_else(|| Some(format!("https://news.ycombinator.com/item?id={}", story.id)))
+            })
     }
 }

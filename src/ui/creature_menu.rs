@@ -1,13 +1,13 @@
 use crate::creature::{
-    Creature, CreatureColor, CreatureSpecies, art::get_creature_art, get_all_outfits,
-    get_skill_tree,
+    art::get_creature_art, get_all_outfits, get_skill_tree, Creature, CreatureColor,
+    CreatureSpecies,
 };
 use ratatui::{
-    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs},
+    Frame,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
