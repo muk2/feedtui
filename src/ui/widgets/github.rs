@@ -5,11 +5,11 @@ use crate::feeds::{
 };
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
-    Frame,
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, ListState, Tabs},
+    Frame,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq)]

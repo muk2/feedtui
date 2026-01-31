@@ -239,7 +239,7 @@ impl Default for Config {
                 WidgetConfig::Rss(RssConfig {
                     title: "Tech News".to_string(),
                     feeds: vec![
-                        "https://feeds.arstechnica.com/arstechnica/technology-lab".to_string(),
+                        "https://feeds.arstechnica.com/arstechnica/technology-lab".to_string()
                     ],
                     max_items: 10,
                     position: Position { row: 1, col: 1 },

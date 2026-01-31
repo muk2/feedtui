@@ -27,9 +27,18 @@ struct SearchItem {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum VideoId {
-    Video { #[serde(rename = "videoId")] video_id: String },
-    Channel { #[serde(rename = "channelId")] channel_id: String },
-    Playlist { #[serde(rename = "playlistId")] playlist_id: String },
+    Video {
+        #[serde(rename = "videoId")]
+        video_id: String,
+    },
+    Channel {
+        #[serde(rename = "channelId")]
+        channel_id: String,
+    },
+    Playlist {
+        #[serde(rename = "playlistId")]
+        playlist_id: String,
+    },
 }
 
 #[derive(Debug, Deserialize)]
@@ -205,11 +214,7 @@ impl YoutubeFetcher {
                 let thumbnail_url = video
                     .snippet
                     .thumbnails
-                    .and_then(|t| {
-                        t.medium
-                            .or(t.high)
-                            .or(t.default)
-                    })
+                    .and_then(|t| t.medium.or(t.high).or(t.default))
                     .map(|info| info.url);
 
                 let view_count = video
@@ -320,11 +325,7 @@ fn format_duration(iso_duration: &str) -> String {
 
 fn format_published_date(iso_date: &str) -> String {
     // Simple formatting - just extract date portion
-    iso_date
-        .split('T')
-        .next()
-        .unwrap_or(iso_date)
-        .to_string()
+    iso_date.split('T').next().unwrap_or(iso_date).to_string()
 }
 fn truncate_description(desc: &str) -> String {
     let char_count = desc.chars().count();
@@ -334,5 +335,4 @@ fn truncate_description(desc: &str) -> String {
     } else {
         desc.to_string()
     }
-
 }

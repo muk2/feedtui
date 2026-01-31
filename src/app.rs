@@ -1,23 +1,23 @@
 use crate::config::{Config, WidgetConfig};
-use crate::creature::Creature;
 use crate::creature::persistence::{default_creature_path, load_or_create_creature, save_creature};
+use crate::creature::Creature;
 use crate::event::{Event, EventHandler};
 use crate::feeds::{FeedData, FeedMessage};
 use crate::ui::creature_menu::CreatureMenu;
 use crate::ui::widgets::{
-    FeedWidget, creature::CreatureWidget, github::GithubWidget, hackernews::HackernewsWidget,
-    rss::RssWidget, sports::SportsWidget, stocks::StocksWidget, youtube::YoutubeWidget,
+    creature::CreatureWidget, github::GithubWidget, hackernews::HackernewsWidget, rss::RssWidget,
+    sports::SportsWidget, stocks::StocksWidget, youtube::YoutubeWidget, FeedWidget,
 };
 use anyhow::Result;
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture, KeyCode, KeyModifiers},
     execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{
-    Frame, Terminal,
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
+    Frame, Terminal,
 };
 use std::io::{self, Stdout};
 use std::path::PathBuf;
