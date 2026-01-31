@@ -7,7 +7,7 @@ pub mod stocks;
 pub mod youtube;
 
 use crate::feeds::{FeedData, FeedFetcher};
-use ratatui::{Frame, layout::Rect};
+use ratatui::{layout::Rect, Frame};
 use std::any::Any;
 
 pub trait FeedWidget: Send + Sync {

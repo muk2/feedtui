@@ -1,14 +1,14 @@
 use crate::config::CreatureConfig;
-use crate::creature::Creature;
 use crate::creature::art::{get_creature_art, get_greeting, get_idle_message};
+use crate::creature::Creature;
 use crate::feeds::{FeedData, FeedFetcher};
 use crate::ui::widgets::FeedWidget;
 use ratatui::{
-    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Gauge, Paragraph},
+    Frame,
 };
 use std::time::Instant;
 

@@ -1,13 +1,13 @@
 use crate::creature::{
-    Creature, CreatureColor, CreatureSpecies, art::get_creature_art, get_all_outfits,
-    get_skill_tree,
+    art::get_creature_art, get_all_outfits, get_skill_tree, Creature, CreatureColor,
+    CreatureSpecies,
 };
 use ratatui::{
-    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Tabs},
+    Frame,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -38,6 +38,13 @@ impl MenuTab {
     }
 }
 
+/// Which panel is focused in the Customize tab
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CustomizePanel {
+    Species,
+    Colors,
+}
+
 pub struct CreatureMenu {
     pub visible: bool,
     current_tab: MenuTab,
@@ -45,6 +52,7 @@ pub struct CreatureMenu {
     outfit_list_state: ListState,
     species_list_state: ListState,
     color_list_state: ListState,
+    customize_panel: CustomizePanel,
 }
 
 impl Default for CreatureMenu {
@@ -65,6 +73,7 @@ impl Default for CreatureMenu {
             outfit_list_state,
             species_list_state,
             color_list_state,
+            customize_panel: CustomizePanel::Species,
         }
     }
 }
@@ -98,6 +107,21 @@ impl CreatureMenu {
         self.current_tab = tabs[prev_idx];
     }
 
+    /// Switch to the next panel (for Customize tab: Species <-> Colors)
+    pub fn next_panel(&mut self) {
+        if self.current_tab == MenuTab::Customize {
+            self.customize_panel = match self.customize_panel {
+                CustomizePanel::Species => CustomizePanel::Colors,
+                CustomizePanel::Colors => CustomizePanel::Species,
+            };
+        }
+    }
+
+    /// Switch to the previous panel (for Customize tab: Species <-> Colors)
+    pub fn prev_panel(&mut self) {
+        self.next_panel(); // Same behavior for 2 panels
+    }
+
     pub fn scroll_up(&mut self) {
         match self.current_tab {
             MenuTab::Skills => {
@@ -114,13 +138,22 @@ impl CreatureMenu {
                     }
                 }
             }
-            MenuTab::Customize => {
-                if let Some(selected) = self.species_list_state.selected() {
-                    if selected > 0 {
-                        self.species_list_state.select(Some(selected - 1));
+            MenuTab::Customize => match self.customize_panel {
+                CustomizePanel::Species => {
+                    if let Some(selected) = self.species_list_state.selected() {
+                        if selected > 0 {
+                            self.species_list_state.select(Some(selected - 1));
+                        }
                     }
                 }
-            }
+                CustomizePanel::Colors => {
+                    if let Some(selected) = self.color_list_state.selected() {
+                        if selected > 0 {
+                            self.color_list_state.select(Some(selected - 1));
+                        }
+                    }
+                }
+            },
             _ => {}
         }
     }
@@ -143,14 +176,24 @@ impl CreatureMenu {
                     }
                 }
             }
-            MenuTab::Customize => {
-                let species_count = CreatureSpecies::all().len();
-                if let Some(selected) = self.species_list_state.selected() {
-                    if selected < species_count.saturating_sub(1) {
-                        self.species_list_state.select(Some(selected + 1));
+            MenuTab::Customize => match self.customize_panel {
+                CustomizePanel::Species => {
+                    let species_count = CreatureSpecies::all().len();
+                    if let Some(selected) = self.species_list_state.selected() {
+                        if selected < species_count.saturating_sub(1) {
+                            self.species_list_state.select(Some(selected + 1));
+                        }
                     }
                 }
-            }
+                CustomizePanel::Colors => {
+                    let color_count = CreatureColor::all().len();
+                    if let Some(selected) = self.color_list_state.selected() {
+                        if selected < color_count.saturating_sub(1) {
+                            self.color_list_state.select(Some(selected + 1));
+                        }
+                    }
+                }
+            },
             _ => {}
         }
     }
@@ -179,15 +222,26 @@ impl CreatureMenu {
                     }
                 }
             }
-            MenuTab::Customize => {
-                let species = CreatureSpecies::all();
-                if let Some(selected) = self.species_list_state.selected() {
-                    if let Some(new_species) = species.get(selected) {
-                        creature.species = new_species.clone();
-                        return true;
+            MenuTab::Customize => match self.customize_panel {
+                CustomizePanel::Species => {
+                    let species = CreatureSpecies::all();
+                    if let Some(selected) = self.species_list_state.selected() {
+                        if let Some(new_species) = species.get(selected) {
+                            creature.species = new_species.clone();
+                            return true;
+                        }
                     }
                 }
-            }
+                CustomizePanel::Colors => {
+                    let colors = CreatureColor::all();
+                    if let Some(selected) = self.color_list_state.selected() {
+                        if let Some(new_color) = colors.get(selected) {
+                            creature.appearance.primary_color = new_color.clone();
+                            return true;
+                        }
+                    }
+                }
+            },
             _ => {}
         }
         false
@@ -465,9 +519,13 @@ impl CreatureMenu {
             .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
             .split(area);
 
+        // Determine which panel is focused for highlighting
+        let species_focused = self.customize_panel == CustomizePanel::Species;
+        let colors_focused = self.customize_panel == CustomizePanel::Colors;
+
         // Species selection
         let species = CreatureSpecies::all();
-        let items: Vec<ListItem> = species
+        let species_items: Vec<ListItem> = species
             .iter()
             .map(|s| {
                 let selected = creature.species == *s;
@@ -494,33 +552,61 @@ impl CreatureMenu {
             })
             .collect();
 
-        let list = List::new(items)
-            .block(Block::default().title(" Species ").borders(Borders::ALL))
+        let species_block = Block::default()
+            .title(" Species (h/l to switch) ")
+            .borders(Borders::ALL)
+            .border_style(if species_focused {
+                Style::default().fg(Color::Yellow)
+            } else {
+                Style::default().fg(Color::White)
+            });
+
+        let species_list = List::new(species_items)
+            .block(species_block)
             .highlight_style(Style::default().bg(Color::DarkGray));
 
-        frame.render_stateful_widget(list, chunks[0], &mut self.species_list_state);
+        frame.render_stateful_widget(species_list, chunks[0], &mut self.species_list_state);
 
-        // Color preview
+        // Color selection (now interactive!)
         let colors = CreatureColor::all();
-        let color_text: Vec<Line> = colors
+        let color_items: Vec<ListItem> = colors
             .iter()
             .map(|c| {
                 let selected = creature.appearance.primary_color == *c;
                 let marker = if selected { "[*]" } else { "[ ]" };
-                Line::from(vec![
-                    Span::styled(marker, Style::default().fg(Color::White)),
+
+                ListItem::new(Line::from(vec![
+                    Span::styled(
+                        marker,
+                        Style::default().fg(if selected {
+                            Color::Green
+                        } else {
+                            Color::DarkGray
+                        }),
+                    ),
                     Span::raw(" "),
                     Span::styled(
                         format!("{:?}", c),
                         Style::default().fg(c.to_ratatui_color()),
                     ),
-                ])
+                ]))
             })
             .collect();
 
-        let colors_para = Paragraph::new(color_text)
-            .block(Block::default().title(" Colors ").borders(Borders::ALL));
-        frame.render_widget(colors_para, chunks[1]);
+        let colors_block = Block::default()
+            .title(" Colors ")
+            .borders(Borders::ALL)
+            .border_style(if colors_focused {
+                Style::default().fg(Color::Yellow)
+            } else {
+                Style::default().fg(Color::White)
+            });
+
+        let colors_list = List::new(color_items)
+            .block(colors_block)
+            .highlight_style(Style::default().bg(Color::DarkGray));
+
+        frame.render_stateful_widget(colors_list, chunks[1], &mut self.color_list_state);
     }
 }
 
