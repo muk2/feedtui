@@ -18,9 +18,8 @@ use crossterm::{
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
-    Frame,
-    Terminal,
-    prelude::Rect
+    prelude::Rect,
+    Frame, Terminal,
 };
 use std::io::{self, Stdout};
 use std::path::PathBuf;
@@ -409,8 +408,8 @@ impl App {
 
     fn render_status_message(&self, frame: &mut Frame, area: Rect) {
         if let Some((message, _)) = &self.status_message {
-            use ratatui::widgets::{Block, Borders, Clear, Paragraph};
             use ratatui::style::{Color, Style};
+            use ratatui::widgets::{Block, Borders, Clear, Paragraph};
 
             let width = (message.len() + 4).min(area.width as usize) as u16;
             let x = area.width.saturating_sub(width).saturating_sub(2);

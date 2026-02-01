@@ -3,7 +3,9 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Wrap},
+    widgets::{
+        Block, Borders, Clear, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Wrap,
+    },
     Frame,
 };
 
@@ -95,7 +97,11 @@ impl ArticleReader {
         // Create the main block
         let block = Block::default()
             .title(format!(" {} ", item.title))
-            .title_style(Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD))
+            .title_style(
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            )
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Yellow));
 
@@ -121,17 +127,20 @@ impl ArticleReader {
         if let Some(ref url) = item.url {
             lines.push(Line::from(vec![
                 Span::styled("URL: ", Style::default().fg(Color::DarkGray)),
-                Span::styled(url, Style::default().fg(Color::Blue).add_modifier(Modifier::UNDERLINED)),
+                Span::styled(
+                    url,
+                    Style::default()
+                        .fg(Color::Blue)
+                        .add_modifier(Modifier::UNDERLINED),
+                ),
             ]));
         }
 
         lines.push(Line::from(""));
-        lines.push(Line::from(vec![
-            Span::styled(
-                "─".repeat(inner.width.saturating_sub(2) as usize),
-                Style::default().fg(Color::DarkGray),
-            ),
-        ]));
+        lines.push(Line::from(vec![Span::styled(
+            "─".repeat(inner.width.saturating_sub(2) as usize),
+            Style::default().fg(Color::DarkGray),
+        )]));
         lines.push(Line::from(""));
 
         // Description/content
@@ -149,7 +158,9 @@ impl ArticleReader {
         } else {
             lines.push(Line::from(Span::styled(
                 "No description available.",
-                Style::default().fg(Color::DarkGray).add_modifier(Modifier::ITALIC),
+                Style::default()
+                    .fg(Color::DarkGray)
+                    .add_modifier(Modifier::ITALIC),
             )));
             lines.push(Line::from(""));
             lines.push(Line::from(Span::styled(
@@ -159,12 +170,10 @@ impl ArticleReader {
         }
 
         lines.push(Line::from(""));
-        lines.push(Line::from(vec![
-            Span::styled(
-                "─".repeat(inner.width.saturating_sub(2) as usize),
-                Style::default().fg(Color::DarkGray),
-            ),
-        ]));
+        lines.push(Line::from(vec![Span::styled(
+            "─".repeat(inner.width.saturating_sub(2) as usize),
+            Style::default().fg(Color::DarkGray),
+        )]));
 
         // Help text
         lines.push(Line::from(""));

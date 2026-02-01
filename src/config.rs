@@ -180,11 +180,33 @@ fn default_max_commits() -> usize {
     10
 }
 
+/// YouTube feed types for personalized content
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum YoutubeFeedType {
+    /// Public search/channel videos (uses API key)
+    Public,
+    /// User's subscriptions feed (requires OAuth)
+    Subscriptions,
+    /// User's liked videos playlist (requires OAuth)
+    LikedVideos,
+    /// User's Watch Later playlist (requires OAuth)
+    WatchLater,
+}
+
+impl Default for YoutubeFeedType {
+    fn default() -> Self {
+        YoutubeFeedType::Public
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct YoutubeConfig {
     #[serde(default = "default_youtube_title")]
     pub title: String,
-    pub api_key: String,
+    /// API key for public API access (required for public feed type)
+    #[serde(default)]
+    pub api_key: Option<String>,
     #[serde(default)]
     pub channels: Vec<String>,
     #[serde(default)]
@@ -192,6 +214,15 @@ pub struct YoutubeConfig {
     #[serde(default = "default_max_videos")]
     pub max_videos: usize,
     pub position: Position,
+    /// OAuth client ID for personalized feeds
+    #[serde(default)]
+    pub client_id: Option<String>,
+    /// OAuth client secret for personalized feeds
+    #[serde(default)]
+    pub client_secret: Option<String>,
+    /// Type of feed to display
+    #[serde(default)]
+    pub feed_type: YoutubeFeedType,
 }
 
 fn default_youtube_title() -> String {
