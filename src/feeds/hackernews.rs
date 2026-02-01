@@ -1,4 +1,4 @@
-use super::{FeedData, FeedFetcher, HnStory};
+use super::{FeedData, FeedFetcher, HnComment, HnStory};
 use anyhow::Result;
 use async_trait::async_trait;
 use serde::Deserialize;
@@ -19,6 +19,8 @@ struct HnItem {
     score: Option<u32>,
     by: Option<String>,
     descendants: Option<u32>,
+    text: Option<String>,
+    kids: Option<Vec<u64>>,
 }
 
 impl HnFetcher {
@@ -40,6 +42,16 @@ impl HnFetcher {
         let url = format!("{}/item/{}.json", HN_API_BASE, id);
         let item: HnItem = self.client.get(&url).send().await?.json().await?;
 
+        // Fetch top-level comments (limit to first 5 for performance)
+        let mut comments = Vec::new();
+        if let Some(kids) = &item.kids {
+            for &kid_id in kids.iter().take(5) {
+                if let Ok(comment) = self.fetch_comment(kid_id).await {
+                    comments.push(comment);
+                }
+            }
+        }
+
         Ok(HnStory {
             id: item.id,
             title: item.title.unwrap_or_else(|| "No title".to_string()),
@@ -47,6 +59,19 @@ impl HnFetcher {
             score: item.score.unwrap_or(0),
             by: item.by.unwrap_or_else(|| "unknown".to_string()),
             descendants: item.descendants.unwrap_or(0),
+            text: item.text,
+            comments,
+        })
+    }
+
+    async fn fetch_comment(&self, id: u64) -> Result<HnComment> {
+        let url = format!("{}/item/{}.json", HN_API_BASE, id);
+        let item: HnItem = self.client.get(&url).send().await?.json().await?;
+
+        Ok(HnComment {
+            by: item.by.unwrap_or_else(|| "unknown".to_string()),
+            text: item.text.unwrap_or_else(|| "".to_string()),
+            time: item.id, // Using id as a placeholder for time
         })
     }
 }

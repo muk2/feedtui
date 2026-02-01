@@ -34,6 +34,15 @@ pub struct HnStory {
     pub score: u32,
     pub by: String,
     pub descendants: u32,
+    pub text: Option<String>,
+    pub comments: Vec<HnComment>,
+}
+
+#[derive(Debug, Clone)]
+pub struct HnComment {
+    pub by: String,
+    pub text: String,
+    pub time: u64,
 }
 
 #[derive(Debug, Clone)]

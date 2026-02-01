@@ -169,10 +169,39 @@ impl FeedWidget for HackernewsWidget {
             .clone()
             .or_else(|| Some(format!("https://news.ycombinator.com/item?id={}", story.id)));
 
+        // Build description from story text and comments
+        let mut description_parts = Vec::new();
+
+        if let Some(ref text) = story.text {
+            description_parts.push(format!("Story text:\n{}\n", text));
+        }
+
+        if !story.comments.is_empty() {
+            description_parts.push("\n─── Discussion Preview ───\n".to_string());
+            for (i, comment) in story.comments.iter().enumerate() {
+                if i > 0 {
+                    description_parts.push("\n---\n".to_string());
+                }
+                description_parts.push(format!("{}: {}", comment.by, comment.text));
+            }
+            if story.descendants > story.comments.len() as u32 {
+                description_parts.push(format!(
+                    "\n\n({} more comments available - press 'o' to view all)",
+                    story.descendants - story.comments.len() as u32
+                ));
+            }
+        }
+
+        let description = if description_parts.is_empty() {
+            None
+        } else {
+            Some(description_parts.join("\n"))
+        };
+
         Some(SelectedItem {
             title: story.title.clone(),
             url,
-            description: None,
+            description,
             source: "Hacker News".to_string(),
             metadata: Some(format!(
                 "{} points | {} comments | by {}",
