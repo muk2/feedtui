@@ -5,6 +5,8 @@ mod event;
 mod feeds;
 mod ui;
 
+use feeds::youtube_oauth::YouTubeOAuth;
+
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
@@ -38,6 +40,17 @@ enum Commands {
     Config,
     /// Install the binary to cargo bin directory
     Install,
+    /// Authenticate with YouTube for personalized feeds
+    YoutubeAuth {
+        /// OAuth client ID (from Google Cloud Console)
+        #[arg(long)]
+        client_id: String,
+        /// OAuth client secret (from Google Cloud Console)
+        #[arg(long)]
+        client_secret: String,
+    },
+    /// Clear YouTube authentication tokens
+    YoutubeLogout,
 }
 
 #[tokio::main]
@@ -55,6 +68,15 @@ async fn main() -> Result<()> {
             }
             Commands::Install => {
                 return show_install_instructions();
+            }
+            Commands::YoutubeAuth {
+                client_id,
+                client_secret,
+            } => {
+                return youtube_auth(client_id, client_secret).await;
+            }
+            Commands::YoutubeLogout => {
+                return youtube_logout();
             }
         }
     }
@@ -289,6 +311,70 @@ fn show_install_instructions() -> Result<()> {
     println!("This will install the binary to ~/.cargo/bin/feedtui");
     println!("Make sure ~/.cargo/bin is in your PATH.\n");
     println!("After installation, you can run 'feedtui' from anywhere!");
+
+    Ok(())
+}
+
+async fn youtube_auth(client_id: String, client_secret: String) -> Result<()> {
+    println!("=== YouTube Authentication ===\n");
+    println!("This will authenticate feedtui with your YouTube account");
+    println!("to access personalized feeds (subscriptions, liked videos, etc.).\n");
+
+    let oauth = YouTubeOAuth::new(client_id, client_secret);
+
+    // Check if already authenticated
+    if oauth.has_valid_tokens() {
+        println!("You are already authenticated with YouTube.");
+        println!("Run 'feedtui youtube-logout' to clear tokens and re-authenticate.\n");
+        return Ok(());
+    }
+
+    // Start device flow
+    println!("Starting device authorization flow...\n");
+    let device_auth = oauth.start_device_flow().await?;
+
+    println!("Please visit: {}", device_auth.verification_url);
+    println!("And enter code: {}\n", device_auth.user_code);
+    println!("Waiting for authorization...");
+
+    // Poll for token
+    match oauth
+        .poll_for_token(&device_auth.device_code, device_auth.interval)
+        .await
+    {
+        Ok(_tokens) => {
+            println!("\nAuthentication successful!");
+            println!("YouTube tokens have been saved.");
+            println!("\nYou can now use personalized feed types in your config:");
+            println!("  feed_type = \"subscriptions\"   # Your subscription feed");
+            println!("  feed_type = \"liked_videos\"    # Your liked videos");
+            println!("  feed_type = \"watch_later\"     # Your Watch Later playlist");
+        }
+        Err(e) => {
+            eprintln!("\nAuthentication failed: {}", e);
+            return Err(e);
+        }
+    }
+
+    Ok(())
+}
+
+fn youtube_logout() -> Result<()> {
+    println!("=== YouTube Logout ===\n");
+
+    // Use a dummy OAuth instance just for clearing tokens
+    let oauth = YouTubeOAuth::new(String::new(), String::new());
+
+    match oauth.clear_tokens() {
+        Ok(_) => {
+            println!("YouTube authentication tokens have been cleared.");
+            println!("Run 'feedtui youtube-auth' to re-authenticate.");
+        }
+        Err(e) => {
+            eprintln!("Failed to clear tokens: {}", e);
+            return Err(e);
+        }
+    }
 
     Ok(())
 }

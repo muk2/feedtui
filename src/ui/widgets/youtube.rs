@@ -158,6 +158,9 @@ impl FeedWidget for YoutubeWidget {
             self.config.channels.clone(),
             self.config.search_query.clone(),
             self.config.max_videos,
+            self.config.feed_type.clone(),
+            self.config.client_id.clone(),
+            self.config.client_secret.clone(),
         ))
     }
 

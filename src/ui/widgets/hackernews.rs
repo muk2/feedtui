@@ -182,7 +182,7 @@ impl FeedWidget for HackernewsWidget {
     }
 
     /// Get the HN discussion URL for the selected story
-     fn get_selected_discussion_url(&self) -> Option<String>{
+    fn get_selected_discussion_url(&self) -> Option<String> {
         let idx = self.scroll_state.selected()?;
         let story = self.stories.get(idx)?;
         Some(format!("https://news.ycombinator.com/item?id={}", story.id))

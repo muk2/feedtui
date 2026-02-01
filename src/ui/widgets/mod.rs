@@ -46,6 +46,4 @@ pub trait FeedWidget: Send + Sync {
         None
     }
     fn get_selected_discussion_url(&self) -> Option<String>;
-
-    
 }

@@ -4,6 +4,7 @@ pub mod rss;
 pub mod sports;
 pub mod stocks;
 pub mod youtube;
+pub mod youtube_oauth;
 
 use anyhow::Result;
 use async_trait::async_trait;
