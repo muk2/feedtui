@@ -98,7 +98,80 @@ impl Clock {
         let hours = total_secs / 3600;
         let minutes = (total_secs % 3600) / 60;
         let seconds = total_secs % 60;
-        format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+        let millis = duration.subsec_millis();
+        format!("{:02}:{:02}:{:02}.{:03}", hours, minutes, seconds, millis)
+    }
+
+    fn draw_analog_clock(hour: u32, minute: u32) -> Vec<String> {
+        // Create a 9x9 pixelated clock face
+        let mut clock = vec![
+            "    ╭───╮    ".to_string(),
+            "  ╭─────────╮".to_string(),
+            " │           │".to_string(),
+            "│             │".to_string(),
+            "│      •      │".to_string(),
+            "│             │".to_string(),
+            " │           │".to_string(),
+            "  ╰─────────╯".to_string(),
+            "    ╰───╯    ".to_string(),
+        ];
+
+        // Clock face center (row 4, col 7 in the grid)
+        let center_row = 4;
+        let center_col = 7;
+
+        // Convert hour to 12-hour format and calculate angles
+        let hour_12 = hour % 12;
+        // Hour hand: 30 degrees per hour, 0.5 degrees per minute
+        let hour_angle =
+            (hour_12 as f64 * 30.0 + minute as f64 * 0.5) * std::f64::consts::PI / 180.0;
+        // Minute hand: 6 degrees per minute
+        let minute_angle = minute as f64 * 6.0 * std::f64::consts::PI / 180.0;
+
+        // Calculate hour hand position (short hand, length 2)
+        let hour_length = 2.0;
+        let hour_row =
+            center_row as f64 - (hour_angle - std::f64::consts::PI / 2.0).sin() * hour_length;
+        let hour_col =
+            center_col as f64 + (hour_angle - std::f64::consts::PI / 2.0).cos() * hour_length;
+
+        // Calculate minute hand position (long hand, length 3)
+        let minute_length = 3.0;
+        let minute_row =
+            center_row as f64 - (minute_angle - std::f64::consts::PI / 2.0).sin() * minute_length;
+        let minute_col =
+            center_col as f64 + (minute_angle - std::f64::consts::PI / 2.0).cos() * minute_length;
+
+        // Draw hands
+        let hour_r = hour_row.round() as usize;
+        let hour_c = hour_col.round() as usize;
+        let minute_r = minute_row.round() as usize;
+        let minute_c = minute_col.round() as usize;
+
+        // Draw hour hand (thicker)
+        if hour_r < clock.len() {
+            let mut chars: Vec<char> = clock[hour_r].chars().collect();
+            if hour_c < chars.len() {
+                chars[hour_c] = '●';
+                clock[hour_r] = chars.into_iter().collect();
+            }
+        }
+
+        // Draw minute hand (thinner)
+        if minute_r < clock.len() {
+            let mut chars: Vec<char> = clock[minute_r].chars().collect();
+            if minute_c < chars.len() {
+                let ch = if minute_r == hour_r && minute_c == hour_c {
+                    '●' // Both hands at same position
+                } else {
+                    '○'
+                };
+                chars[minute_c] = ch;
+                clock[minute_r] = chars.into_iter().collect();
+            }
+        }
+
+        clock
     }
 }
 
@@ -200,6 +273,33 @@ impl Clock {
             .unwrap_or("UTC")
             .to_string();
 
+        // Split area for analog clock and timezone list
+        let chunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Length(17), Constraint::Min(0)])
+            .split(area);
+
+        // Render analog clock for first timezone
+        if let Some(first_tz) = self.timezones.first() {
+            if let Ok(tz) = jiff::tz::TimeZone::get(first_tz) {
+                let time_in_tz = now.to_zoned(tz);
+                let hour = time_in_tz.hour() as u32;
+                let minute = time_in_tz.minute() as u32;
+
+                let clock_art = Self::draw_analog_clock(hour, minute);
+                let clock_lines: Vec<Line> = clock_art
+                    .iter()
+                    .map(|line| {
+                        Line::from(Span::styled(line.clone(), Style::default().fg(Color::Cyan)))
+                    })
+                    .collect();
+
+                let clock_widget = Paragraph::new(clock_lines).alignment(Alignment::Left);
+                frame.render_widget(clock_widget, chunks[0]);
+            }
+        }
+
+        // Render timezone text on the right
         let mut text_lines = Vec::new();
 
         for timezone_str in &self.timezones {
@@ -236,7 +336,7 @@ impl Clock {
         }
 
         let paragraph = Paragraph::new(text_lines).alignment(Alignment::Left);
-        frame.render_widget(paragraph, area);
+        frame.render_widget(paragraph, chunks[1]);
     }
 
     fn render_stopwatch(&self, frame: &mut Frame, area: Rect) {
