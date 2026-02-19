@@ -64,6 +64,16 @@ max_pull_requests = 10
 max_commits = 10
 position = { row = 1, col = 2 }
 
+# Twitter Archive Widget - Optional
+# Browse archived tweets from the Wayback Machine
+# No API key required - uses the freely accessible Wayback CDX API
+# [[widgets]]
+# type = "twitter_archive"
+# title = "Archived Tweets"
+# archive_query = "twitter.com/gethigher77*"  # Wayback query (wildcards allowed)
+# max_items = 20                               # Max tweets to display (default: 20)
+# position = { row = 2, col = 1 }
+
 # YouTube Widget - Optional
 # Display YouTube videos from channels or search queries
 # Requires a YouTube Data API v3 key

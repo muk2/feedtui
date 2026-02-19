@@ -7,6 +7,7 @@ pub mod rss;
 pub mod sports;
 pub mod stocks;
 pub mod twitter;
+pub mod twitter_archive;
 pub mod youtube;
 
 use crate::feeds::{FeedData, FeedFetcher};

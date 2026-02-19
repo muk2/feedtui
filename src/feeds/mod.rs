@@ -3,6 +3,7 @@ pub mod hackernews;
 pub mod rss;
 pub mod sports;
 pub mod stocks;
+pub mod twitter_archive;
 pub mod youtube;
 
 use anyhow::Result;
@@ -22,6 +23,7 @@ pub enum FeedData {
     Sports(Vec<SportsEvent>),
     Github(GithubDashboard),
     Youtube(Vec<YoutubeVideo>),
+    TwitterArchive(Vec<TwitterArchiveItem>),
     Loading,
     Error(String),
 }
@@ -142,6 +144,17 @@ pub struct YoutubeVideo {
     pub thumbnail_url: Option<String>,
     pub view_count: Option<String>,
     pub duration: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TwitterArchiveItem {
+    #[allow(dead_code)]
+    pub timestamp: String,
+    pub original_url: String,
+    pub archive_url: String,
+    pub tweet_text: Option<String>,
+    pub author: Option<String>,
+    pub date_display: String,
 }
 
 #[async_trait]

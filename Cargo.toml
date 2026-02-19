@@ -43,6 +43,7 @@ futures = "0.3"
 urlencoding = "2"
 open = "5"
 textwrap = "0.16"
+scraper = "0.22"
 image = "0.25"
 
 [dev-dependencies]

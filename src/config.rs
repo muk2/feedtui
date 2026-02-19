@@ -46,6 +46,8 @@ pub enum WidgetConfig {
     Github(GithubConfig),
     Youtube(YoutubeConfig),
     Twitter(TwitterConfig),
+    #[serde(rename = "twitter_archive")]
+    TwitterArchive(TwitterArchiveConfig),
     Pixelart(PixelArtConfig),
     Clock(ClockConfig),
 }
@@ -214,6 +216,24 @@ pub struct TwitterConfig {
 
 fn default_twitter_title() -> String {
     "Twitter/X".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TwitterArchiveConfig {
+    #[serde(default = "default_twitter_archive_title")]
+    pub title: String,
+    pub archive_query: String,
+    #[serde(default = "default_archive_max_items")]
+    pub max_items: usize,
+    pub position: Position,
+}
+
+fn default_twitter_archive_title() -> String {
+    "Archived Tweets".to_string()
+}
+
+fn default_archive_max_items() -> usize {
+    20
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

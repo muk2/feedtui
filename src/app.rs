@@ -10,7 +10,8 @@ use crate::ui::creature_menu::CreatureMenu;
 use crate::ui::widgets::{
     clock::Clock, creature::CreatureWidget, github::GithubWidget, hackernews::HackernewsWidget,
     pixelart::PixelArtWidget, rss::RssWidget, sports::SportsWidget, stocks::StocksWidget,
-    twitter::TwitterWidget, youtube::YoutubeWidget, FeedWidget,
+    twitter::TwitterWidget, twitter_archive::TwitterArchiveWidget, youtube::YoutubeWidget,
+    FeedWidget,
 };
 use anyhow::Result;
 use crossterm::{
@@ -70,6 +71,9 @@ impl App {
                 WidgetConfig::Github(cfg) => Box::new(GithubWidget::new(cfg.clone())),
                 WidgetConfig::Youtube(cfg) => Box::new(YoutubeWidget::new(cfg.clone())),
                 WidgetConfig::Twitter(cfg) => Box::new(TwitterWidget::new(cfg.clone())),
+                WidgetConfig::TwitterArchive(cfg) => {
+                    Box::new(TwitterArchiveWidget::new(cfg.clone()))
+                }
                 WidgetConfig::Pixelart(cfg) => Box::new(PixelArtWidget::new(cfg.clone())),
                 WidgetConfig::Clock(cfg) => Box::new(Clock::new(cfg.clone())),
                 WidgetConfig::Creature(cfg) => {
