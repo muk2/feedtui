@@ -1,6 +1,6 @@
 [package]
 name = "feedtui"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 description = "A configurable terminal dashboard for stocks, news, sports, and social feeds with a virtual pet companion"
 authors = ["malchal"]
