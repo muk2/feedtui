@@ -50,6 +50,7 @@ pub enum WidgetConfig {
     TwitterArchive(TwitterArchiveConfig),
     Pixelart(PixelArtConfig),
     Clock(ClockConfig),
+    Giphy(GiphyConfig),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -260,6 +261,24 @@ pub struct ClockConfig {
 
 fn default_clock_title() -> String {
     "World Clock".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GiphyConfig {
+    #[serde(default = "default_giphy_title")]
+    pub title: String,
+    pub api_key: String,
+    #[serde(default)]
+    pub query: Option<String>,
+    #[serde(default)]
+    pub mode: Option<String>,
+    #[serde(default)]
+    pub frame_delay_ms: Option<u64>,
+    pub position: Position,
+}
+
+fn default_giphy_title() -> String {
+    "Giphy".to_string()
 }
 
 fn default_timezones() -> Vec<String> {

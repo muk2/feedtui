@@ -1,5 +1,6 @@
 pub mod clock;
 pub mod creature;
+pub mod giphy;
 pub mod github;
 pub mod hackernews;
 pub mod pixelart;

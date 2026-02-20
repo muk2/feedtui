@@ -8,10 +8,10 @@ use crate::twitter_parser;
 use crate::ui::article_reader::ArticleReader;
 use crate::ui::creature_menu::CreatureMenu;
 use crate::ui::widgets::{
-    clock::Clock, creature::CreatureWidget, github::GithubWidget, hackernews::HackernewsWidget,
-    pixelart::PixelArtWidget, rss::RssWidget, sports::SportsWidget, stocks::StocksWidget,
-    twitter::TwitterWidget, twitter_archive::TwitterArchiveWidget, youtube::YoutubeWidget,
-    FeedWidget,
+    clock::Clock, creature::CreatureWidget, giphy::GiphyWidget, github::GithubWidget,
+    hackernews::HackernewsWidget, pixelart::PixelArtWidget, rss::RssWidget, sports::SportsWidget,
+    stocks::StocksWidget, twitter::TwitterWidget, twitter_archive::TwitterArchiveWidget,
+    youtube::YoutubeWidget, FeedWidget,
 };
 use anyhow::Result;
 use crossterm::{
@@ -76,6 +76,7 @@ impl App {
                 }
                 WidgetConfig::Pixelart(cfg) => Box::new(PixelArtWidget::new(cfg.clone())),
                 WidgetConfig::Clock(cfg) => Box::new(Clock::new(cfg.clone())),
+                WidgetConfig::Giphy(cfg) => Box::new(GiphyWidget::new(cfg.clone())),
                 WidgetConfig::Creature(cfg) => {
                     creature_widget_idx = Some(widgets.len());
                     Box::new(CreatureWidget::new(cfg.clone(), creature.clone()))
@@ -519,6 +520,16 @@ impl App {
         for widget in &mut self.widgets {
             if let Some(clock) = widget.as_any_mut().and_then(|w| w.downcast_mut::<Clock>()) {
                 clock.tick_stopwatch();
+            }
+        }
+
+        // Tick all giphy widgets for animation
+        for widget in &mut self.widgets {
+            if let Some(giphy) = widget
+                .as_any_mut()
+                .and_then(|w| w.downcast_mut::<GiphyWidget>())
+            {
+                giphy.tick();
             }
         }
     }
