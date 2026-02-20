@@ -1,3 +1,4 @@
+pub mod giphy;
 pub mod github;
 pub mod hackernews;
 pub mod rss;
@@ -24,8 +25,18 @@ pub enum FeedData {
     Github(GithubDashboard),
     Youtube(Vec<YoutubeVideo>),
     TwitterArchive(Vec<TwitterArchiveItem>),
+    Giphy(GiphyGif),
     Loading,
     Error(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct GiphyGif {
+    #[allow(dead_code)]
+    pub id: String,
+    pub title: String,
+    /// Each frame is a Vec of lines (ASCII art rows)
+    pub frames: Vec<Vec<String>>,
 }
 
 #[derive(Debug, Clone)]
