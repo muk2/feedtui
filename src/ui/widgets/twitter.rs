@@ -44,6 +44,7 @@ pub use crate::twitter_message::Tweet;
 #[derive(Debug, Clone)]
 struct TweetDetail {
     content: String,
+    scroll_offset: u16,
 }
 
 impl TwitterWidget {
@@ -118,6 +119,33 @@ impl TwitterWidget {
         self.detail_view = None;
     }
 
+    pub fn clear_tweets(&mut self) {
+        self.tweets.clear();
+        self.selected_index = 0;
+        self.list_state.select(Some(0));
+        self.detail_view = None;
+    }
+
+    pub fn has_tweets(&self) -> bool {
+        !self.tweets.is_empty()
+    }
+
+    pub fn has_detail_view(&self) -> bool {
+        self.detail_view.is_some()
+    }
+
+    pub fn scroll_detail_down(&mut self) {
+        if let Some(detail) = &mut self.detail_view {
+            detail.scroll_offset = detail.scroll_offset.saturating_add(1);
+        }
+    }
+
+    pub fn scroll_detail_up(&mut self) {
+        if let Some(detail) = &mut self.detail_view {
+            detail.scroll_offset = detail.scroll_offset.saturating_sub(1);
+        }
+    }
+
     pub async fn execute_bird_command_static(args: &[&str]) -> anyhow::Result<String> {
         // Check for environment variables
         let ct0 = std::env::var("CT0").map_err(|_| {
@@ -150,15 +178,24 @@ impl TwitterWidget {
                 }
             })?;
 
+        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+
+        // Filter out Node.js ExperimentalWarning lines from stderr
+        let filtered_stderr: String = stderr
+            .lines()
+            .filter(|line| !line.contains("ExperimentalWarning"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let filtered_stderr = filtered_stderr.trim();
+
         if output.status.success() {
-            Ok(String::from_utf8_lossy(&output.stdout).to_string())
+            Ok(stdout)
         } else {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            let msg = if stderr.is_empty() {
-                stdout.to_string()
+            let msg = if filtered_stderr.is_empty() {
+                stdout
             } else {
-                stderr.to_string()
+                filtered_stderr.to_string()
             };
             Err(anyhow::anyhow!("Bird command failed: {}", msg.trim()))
         }
@@ -237,7 +274,10 @@ impl TwitterWidget {
                 }
             }
             TwitterData::TweetDetail(content) => {
-                self.detail_view = Some(TweetDetail { content });
+                self.detail_view = Some(TweetDetail {
+                    content,
+                    scroll_offset: 0,
+                });
             }
             TwitterData::Error(e) => {
                 self.set_status(format!("Error: {}", e));
@@ -311,6 +351,7 @@ impl FeedWidget for TwitterWidget {
             let paragraph = Paragraph::new(help_text).alignment(Alignment::Center);
             frame.render_widget(paragraph, inner);
         } else {
+            let max_text_width = inner.width.saturating_sub(2) as usize;
             let items: Vec<ListItem> = self
                 .tweets
                 .iter()
@@ -321,10 +362,16 @@ impl FeedWidget for TwitterWidget {
                     } else {
                         Style::default().fg(Color::White)
                     };
+                    let prefix = format!("@{}: ", tweet.author);
+                    let remaining = max_text_width.saturating_sub(prefix.len());
+                    let text = if tweet.text.len() > remaining {
+                        format!("{}...", &tweet.text[..remaining.saturating_sub(3)])
+                    } else {
+                        tweet.text.clone()
+                    };
                     ListItem::new(Line::from(vec![
-                        Span::styled(&tweet.author, style.add_modifier(Modifier::BOLD)),
-                        Span::raw(": "),
-                        Span::styled(&tweet.text, style),
+                        Span::styled(prefix, style.add_modifier(Modifier::BOLD)),
+                        Span::styled(text, style),
                     ]))
                 })
                 .collect();
@@ -398,7 +445,7 @@ impl FeedWidget for TwitterWidget {
 
 impl TwitterWidget {
     fn render_compose_modal(&self, frame: &mut Frame, area: Rect) {
-        let modal_area = self.center_rect(60, 30, area);
+        let modal_area = self.centered_modal(area, 50, 10);
         frame.render_widget(Clear, modal_area);
 
         let block = Block::default()
@@ -409,9 +456,20 @@ impl TwitterWidget {
         let inner = block.inner(modal_area);
         frame.render_widget(block, modal_area);
 
+        let display_text = if self.compose_text.is_empty() {
+            "Type your tweet...".to_string()
+        } else {
+            self.compose_text.clone()
+        };
+
+        let text_style = if self.compose_text.is_empty() {
+            Style::default().fg(Color::DarkGray)
+        } else {
+            Style::default().fg(Color::White)
+        };
+
         let text = vec![
-            Line::from(""),
-            Line::from(self.compose_text.as_str()),
+            Line::from(Span::styled(display_text, text_style)),
             Line::from(""),
             Line::from(Span::styled(
                 "Enter to post | Esc to cancel",
@@ -424,7 +482,7 @@ impl TwitterWidget {
     }
 
     fn render_reply_modal(&self, frame: &mut Frame, area: Rect) {
-        let modal_area = self.center_rect(60, 30, area);
+        let modal_area = self.centered_modal(area, 50, 12);
         frame.render_widget(Clear, modal_area);
 
         let block = Block::default()
@@ -435,22 +493,58 @@ impl TwitterWidget {
         let inner = block.inner(modal_area);
         frame.render_widget(block, modal_area);
 
-        let text = vec![
-            Line::from(""),
-            Line::from(self.compose_text.as_str()),
-            Line::from(""),
-            Line::from(Span::styled(
-                "Enter to post | Esc to cancel",
-                Style::default().fg(Color::DarkGray),
-            )),
-        ];
+        let mut lines = Vec::new();
 
-        let paragraph = Paragraph::new(text).wrap(Wrap { trim: false });
+        // Show which tweet is being replied to
+        if let Some(tweet) = self.tweets.get(self.selected_index) {
+            lines.push(Line::from(vec![
+                Span::styled("To @", Style::default().fg(Color::DarkGray)),
+                Span::styled(
+                    &tweet.author,
+                    Style::default()
+                        .fg(Color::Cyan)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(": ", Style::default().fg(Color::DarkGray)),
+            ]));
+            let preview_width = inner.width.saturating_sub(2) as usize;
+            let preview = if tweet.text.len() > preview_width {
+                format!("{}...", &tweet.text[..preview_width.saturating_sub(3)])
+            } else {
+                tweet.text.clone()
+            };
+            lines.push(Line::from(Span::styled(
+                preview,
+                Style::default().fg(Color::DarkGray),
+            )));
+            lines.push(Line::from(""));
+        }
+
+        let display_text = if self.compose_text.is_empty() {
+            "Type your reply...".to_string()
+        } else {
+            self.compose_text.clone()
+        };
+
+        let text_style = if self.compose_text.is_empty() {
+            Style::default().fg(Color::DarkGray)
+        } else {
+            Style::default().fg(Color::White)
+        };
+
+        lines.push(Line::from(Span::styled(display_text, text_style)));
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::styled(
+            "Enter to post | Esc to cancel",
+            Style::default().fg(Color::DarkGray),
+        )));
+
+        let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
         frame.render_widget(paragraph, inner);
     }
 
     fn render_search_modal(&self, frame: &mut Frame, area: Rect) {
-        let modal_area = self.center_rect(60, 20, area);
+        let modal_area = self.centered_modal(area, 50, 7);
         frame.render_widget(Clear, modal_area);
 
         let block = Block::default()
@@ -462,7 +556,6 @@ impl TwitterWidget {
         frame.render_widget(block, modal_area);
 
         let text = vec![
-            Line::from(""),
             Line::from(format!("Query: {}", self.search_query)),
             Line::from(""),
             Line::from(Span::styled(
@@ -471,7 +564,7 @@ impl TwitterWidget {
             )),
         ];
 
-        let paragraph = Paragraph::new(text);
+        let paragraph = Paragraph::new(text).wrap(Wrap { trim: false });
         frame.render_widget(paragraph, inner);
     }
 
@@ -482,14 +575,14 @@ impl TwitterWidget {
         let block = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Cyan))
-            .title("Tweet Detail");
+            .title("Tweet Detail (j/k scroll, Esc close)");
 
         let inner = block.inner(modal_area);
         frame.render_widget(block, modal_area);
 
         let paragraph = Paragraph::new(detail.content.as_str())
             .wrap(Wrap { trim: false })
-            .block(Block::default());
+            .scroll((detail.scroll_offset, 0));
         frame.render_widget(paragraph, inner);
     }
 
@@ -505,9 +598,20 @@ impl TwitterWidget {
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::Yellow));
 
-        let paragraph = Paragraph::new(message).block(block);
+        let paragraph = Paragraph::new(message)
+            .block(block)
+            .wrap(Wrap { trim: true });
         frame.render_widget(Clear, status_area);
         frame.render_widget(paragraph, status_area);
+    }
+
+    /// Create a centered modal rect with absolute minimum sizes
+    fn centered_modal(&self, area: Rect, min_width: u16, min_height: u16) -> Rect {
+        let width = area.width.saturating_sub(4).max(min_width).min(area.width);
+        let height = min_height.min(area.height);
+        let x = area.x + area.width.saturating_sub(width) / 2;
+        let y = area.y + area.height.saturating_sub(height) / 2;
+        Rect::new(x, y, width, height)
     }
 
     fn center_rect(&self, percent_x: u16, percent_y: u16, r: Rect) -> Rect {

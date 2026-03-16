@@ -236,6 +236,11 @@ impl App {
 
                 // Normal event handling
                 match key.code {
+                    KeyCode::Esc => {
+                        if self.is_twitter_selected() {
+                            self.twitter_escape();
+                        }
+                    }
                     KeyCode::Char('q') => self.should_quit = true,
                     KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         self.should_quit = true
@@ -656,12 +661,23 @@ impl App {
                 {
                     match key.code {
                         KeyCode::Esc => {
-                            tw.close_modal();
-                            tw.close_detail_view();
+                            if tw.has_detail_view() {
+                                tw.close_detail_view();
+                            } else {
+                                tw.close_modal();
+                            }
                         }
-                        KeyCode::Char(c) => tw.add_char(c),
+                        KeyCode::Down | KeyCode::Char('j') if tw.has_detail_view() => {
+                            tw.scroll_detail_down();
+                        }
+                        KeyCode::Up | KeyCode::Char('k') if tw.has_detail_view() => {
+                            tw.scroll_detail_up();
+                        }
+                        KeyCode::Char(c) if !tw.has_detail_view() => {
+                            tw.add_char(c);
+                        }
                         KeyCode::Backspace => tw.delete_char(),
-                        KeyCode::Enter => {
+                        KeyCode::Enter if !tw.has_detail_view() => {
                             // Extract data needed for spawning command
                             let widget_id = tw.id();
                             let mode = tw.get_mode();
@@ -693,6 +709,21 @@ impl App {
                 .is_some()
         } else {
             false
+        }
+    }
+
+    fn twitter_escape(&mut self) {
+        if let Some(widget) = self.widgets.get_mut(self.selected_widget) {
+            if let Some(tw) = widget
+                .as_any_mut()
+                .and_then(|w| w.downcast_mut::<TwitterWidget>())
+            {
+                if tw.has_detail_view() {
+                    tw.close_detail_view();
+                } else if tw.has_tweets() {
+                    tw.clear_tweets();
+                }
+            }
         }
     }
 
@@ -815,6 +846,11 @@ impl App {
                             Err(e) => TwitterData::Error(e.to_string()),
                         };
                         let _ = tx.send(TwitterMessage { widget_id, data });
+                    });
+                } else {
+                    let _ = tx.send(TwitterMessage {
+                        widget_id,
+                        data: TwitterData::Error("No tweet selected to reply to".to_string()),
                     });
                 }
             }
